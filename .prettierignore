@@ -1,0 +1,8 @@
+/node_modules
+/bun.lock
+*.log
+/dist
+/build
+/coverage
+/.idea
+

@@ -1,6 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
+import prettierConfig from "eslint-config-prettier";
 
 /**
  * ESLint flat config for Bun + Elysia (TypeScript).
@@ -10,18 +11,12 @@ import tseslint from "typescript-eslint";
  */
 export default [
   {
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      "coverage/**",
-      ".idea/**",
-    ],
+    ignores: ["node_modules/**", "dist/**", "build/**", "coverage/**", ".idea/**"],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"] ,
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -38,5 +33,5 @@ export default [
       ],
     },
   },
+  prettierConfig,
 ];
-
