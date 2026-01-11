@@ -1,0 +1,10 @@
+/node_modules
+
+/.git
+/.gitignore
+/bun.lock
+
+/.idea
+/.vscode
+
+/.DS_Store
