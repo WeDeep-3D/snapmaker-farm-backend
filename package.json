@@ -1,6 +1,8 @@
 {
   "name": "snapmaker-farm-backend",
   "version": "1.0.50",
+  "type": "module",
+  "module": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
@@ -30,7 +32,6 @@
     "prettier": "^3.7.4",
     "typescript-eslint": "^8.52.0"
   },
-  "module": "src/index.js",
   "overrides": {
     "@sinclair/typebox": ">= 0.34.0 < 1"
   }
