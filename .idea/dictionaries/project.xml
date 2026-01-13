@@ -5,8 +5,11 @@
       <w>Polymaker</w>
       <w>Snapmaker</w>
       <w>bvoh</w>
+      <w>canbus</w>
+      <w>klipper</w>
       <w>pctg</w>
       <w>petg</w>
+      <w>virt</w>
     </words>
   </dictionary>
 </component>
