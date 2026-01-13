@@ -19,65 +19,23 @@ export type ScanProgress = {
   total: number
 }
 
-class AsyncResultQueue<T> implements AsyncIterable<T> {
-  private queue: T[] = []
-  private pending: ((value: IteratorResult<T>) => void)[] = []
-  private finished = false
-
-  push(value: T) {
-    if (this.finished) return
-    if (this.pending.length) {
-      this.pending.shift()?.({ value, done: false })
-      return
-    }
-    this.queue.push(value)
-  }
-
-  end() {
-    this.finished = true
-    while (this.pending.length) {
-      this.pending.shift()?.({ value: undefined as never, done: true })
-    }
-  }
-
-  [Symbol.asyncIterator](): AsyncIterator<T> {
-    return {
-      next: () => this.next(),
-    }
-  }
-
-  private next(): Promise<IteratorResult<T>> {
-    if (this.queue.length) {
-      const value = this.queue.shift() as T
-      return Promise.resolve({ value, done: false })
-    }
-    if (this.finished) {
-      return Promise.resolve({ value: undefined as never, done: true })
-    }
-    return new Promise<IteratorResult<T>>((resolve) => this.pending.push(resolve))
-  }
-}
-
 export abstract class Device {
-  static scanDevices(
+  static async *scanDevices(
     beginIpNumber: bigint,
     endIpNumber: bigint,
-  ): AsyncIterable<ScanProgress> {
+  ): AsyncGenerator<ScanProgress> {
     const CONCURRENCY = 200
 
     const ipsToCheck = generateIpsToCheck(beginIpNumber, endIpNumber)
 
-    const queue = new AsyncResultQueue<ScanProgress>()
-
     if (!ipsToCheck.length) {
-      queue.push({
+      yield {
         done: true,
         data: [],
         processed: 0,
         total: 0,
-      })
-      queue.end()
-      return queue
+      }
+      return
     }
 
     const results: string[] = []
@@ -85,6 +43,18 @@ export abstract class Device {
     const workerCount = Math.min(CONCURRENCY, totalCount)
 
     let processed = 0
+    const updates: ScanProgress[] = []
+    let notify: (() => void) | null = null
+    let finished = false
+
+    const pushUpdate = (update: ScanProgress) => {
+      updates.push(update)
+      if (notify) {
+        notify()
+        notify = null
+      }
+    }
+
     log.debug(
       {
         totalIps: endIpNumber - beginIpNumber,
@@ -94,7 +64,7 @@ export abstract class Device {
       'Start scanning devices',
     )
 
-    ;(async () => {
+    const runWorkers = (async () => {
       try {
         const worker = async (id: number) => {
           while (ipsToCheck.length) {
@@ -104,7 +74,7 @@ export abstract class Device {
             }
             if (await checkIsMoonrakerDevice(ip)) {
               results.push(ip)
-              queue.push({
+              pushUpdate({
                 done: false,
                 data: [...results],
                 processed,
@@ -130,14 +100,14 @@ export abstract class Device {
           Array.from({ length: workerCount }, (_, idx) => worker(idx + 1)),
         )
 
-        queue.push({
+        pushUpdate({
           done: true,
           data: [...results],
           processed: totalCount,
           total: totalCount,
         })
       } catch (error) {
-        queue.push({
+        pushUpdate({
           done: true,
           data: [...results],
           processed,
@@ -145,11 +115,24 @@ export abstract class Device {
         })
         log.error({ error }, 'Scan failed')
       } finally {
-        queue.end()
+        finished = true
       }
     })()
 
-    return queue
+    while (true) {
+      if (updates.length) {
+        yield updates.shift() as ScanProgress
+        continue
+      }
+      if (finished) {
+        break
+      }
+      await new Promise<void>((resolve) => {
+        notify = resolve
+      })
+    }
+
+    await runWorkers
   }
 }
 
