@@ -54,44 +54,42 @@ export abstract class Device {
         notify = null
       }
     }
-
-    log.debug(
-      {
-        totalIps: endIpNumber - beginIpNumber,
-        queued: totalCount,
-        workerCount,
-      },
-      'Start scanning devices',
-    )
+    const nextIp = (() => {
+      let idx = 0
+      return () => {
+        if (idx >= totalCount) return null
+        return ipsToCheck[idx++]
+      }
+    })()
 
     const runWorkers = (async () => {
       try {
         const worker = async (id: number) => {
-          while (ipsToCheck.length) {
-            const ip = ipsToCheck.pop()
-            if (!ip) {
-              break
-            }
+          while (true) {
+            const ip = nextIp()
+            if (!ip) break
+
             if (await checkIsMoonrakerDevice(ip)) {
               results.push(ip)
               pushUpdate({
                 done: false,
-                data: [...results],
-                processed,
+                data: results,
+                processed: processed + 1,
                 total: totalCount,
               })
             }
+
             const processedNow = ++processed
-            if (processedNow % 50 === 0 || processedNow === totalCount) {
-              log.debug(
-                {
-                  workerId: id,
-                  processed: processedNow,
-                  queued: totalCount,
-                  found: results.length,
-                },
-                'Scan progress',
-              )
+            if (
+              processedNow % CONCURRENCY === 0 ||
+              processedNow === totalCount
+            ) {
+              pushUpdate({
+                done: false,
+                data: results,
+                processed: processed + 1,
+                total: totalCount,
+              })
             }
           }
         }
