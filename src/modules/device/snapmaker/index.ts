@@ -4,7 +4,7 @@ import { log } from '@/log'
 import { HttpApi } from './api'
 import { KlippyState, PrintState } from './types'
 
-export class SnapmakerHelper {
+export class SnapmakerDevice {
   private _klippyState: KlippyState = KlippyState.unknown
   private _printState: PrintState = PrintState.unknown
   private _httpApi: HttpApi

@@ -30,8 +30,11 @@ export const device = new Elysia({ prefix: '/api/v1/device' })
         )
       }
 
-      for await (const result of Device.scanDevices(beginIpNumber, endIpNumber)) {
-        yield result
+      for await (const progress of Device.scanDevices(
+        beginIpNumber,
+        endIpNumber,
+      )) {
+        yield progress
       }
     },
     {

@@ -5,140 +5,27 @@ import { db } from '@/database'
 import { devices } from '@/database/schema'
 import { log } from '@/log'
 
-import { SnapmakerHelper } from './snapmaker'
-import {
-  checkIsMoonrakerDevice,
-  checkIsSnapmakerDevice,
-  generateIpsToCheck,
-} from './utils'
-
-export type ScanProgress = {
-  done: boolean
-  data: string[]
-  processed: number
-  total: number
-}
+import { DeviceScanner, type ScanProgress } from './helper'
+import { SnapmakerDevice } from './snapmaker'
+import { checkIsMoonrakerDevice, checkIsSnapmakerDevice } from './utils'
 
 export abstract class Device {
   static async *scanDevices(
     beginIpNumber: bigint,
     endIpNumber: bigint,
   ): AsyncGenerator<ScanProgress> {
-    const CONCURRENCY = 200
-
-    const ipsToCheck = generateIpsToCheck(beginIpNumber, endIpNumber)
-
-    if (!ipsToCheck.length) {
-      yield {
-        done: true,
-        data: [],
-        processed: 0,
-        total: 0,
-      }
-      return
+    const scanner = new DeviceScanner(beginIpNumber, endIpNumber)
+    for await (const progress of scanner.scan()) {
+      yield progress
     }
-
-    const results: string[] = []
-    const totalCount = ipsToCheck.length
-    const workerCount = Math.min(CONCURRENCY, totalCount)
-
-    let processed = 0
-    const updates: ScanProgress[] = []
-    let notify: (() => void) | null = null
-    let finished = false
-
-    const pushUpdate = (update: ScanProgress) => {
-      updates.push(update)
-      if (notify) {
-        notify()
-        notify = null
-      }
-    }
-    const nextIp = (() => {
-      let idx = 0
-      return () => {
-        if (idx >= totalCount) return null
-        return ipsToCheck[idx++]
-      }
-    })()
-
-    const runWorkers = (async () => {
-      try {
-        const worker = async (id: number) => {
-          while (true) {
-            const ip = nextIp()
-            if (!ip) break
-
-            if (await checkIsMoonrakerDevice(ip)) {
-              results.push(ip)
-              pushUpdate({
-                done: false,
-                data: results,
-                processed: processed + 1,
-                total: totalCount,
-              })
-            }
-
-            const processedNow = ++processed
-            if (
-              processedNow % CONCURRENCY === 0 ||
-              processedNow === totalCount
-            ) {
-              pushUpdate({
-                done: false,
-                data: results,
-                processed: processed + 1,
-                total: totalCount,
-              })
-            }
-          }
-        }
-
-        await Promise.all(
-          Array.from({ length: workerCount }, (_, idx) => worker(idx + 1)),
-        )
-
-        pushUpdate({
-          done: true,
-          data: [...results],
-          processed: totalCount,
-          total: totalCount,
-        })
-      } catch (error) {
-        pushUpdate({
-          done: true,
-          data: [...results],
-          processed,
-          total: totalCount,
-        })
-        log.error({ error }, 'Scan failed')
-      } finally {
-        finished = true
-      }
-    })()
-
-    while (true) {
-      if (updates.length) {
-        yield updates.shift() as ScanProgress
-        continue
-      }
-      if (finished) {
-        break
-      }
-      await new Promise<void>((resolve) => {
-        notify = resolve
-      })
-    }
-
-    await runWorkers
   }
 }
 
 export const deviceService = new Elysia({ name: 'device.service' })
   .state({
-    connectedDevices: new Map<string, SnapmakerHelper>(),
+    connectedDevices: new Map<string, SnapmakerDevice>(),
     disconnectedDevices: new Map<string, typeof devices.$inferSelect>(),
-    unknownDevices: new Map<string, SnapmakerHelper>(),
+    unknownDevices: new Map<string, SnapmakerDevice>(),
   })
   .onStart(async ({ store }) => {
     const allDevices = await db.select().from(devices)
@@ -151,10 +38,10 @@ export const deviceService = new Elysia({ name: 'device.service' })
           return
         }
         if (!(await checkIsSnapmakerDevice(ip))) {
-          store.unknownDevices.set(device.id, new SnapmakerHelper(ip, device))
+          store.unknownDevices.set(device.id, new SnapmakerDevice(ip, device))
           return
         }
-        store.connectedDevices.set(device.id, new SnapmakerHelper(ip, device))
+        store.connectedDevices.set(device.id, new SnapmakerDevice(ip, device))
       }),
     )
     log.info(
