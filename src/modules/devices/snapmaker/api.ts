@@ -1,4 +1,4 @@
-import { KlippyState } from '@/modules/device/snapmaker/types'
+import { KlippyState } from './types'
 
 interface MoonrakerInfo {
   result: {
@@ -126,7 +126,7 @@ export class HttpApi {
     if (!response.ok) {
       throw new Error(`Failed to fetch Moonraker info: ${response.statusText}`)
     }
-    return response.json()
+    return (await response.json()) as MoonrakerInfo
   }
 
   async getSystemInfo(): Promise<SystemInfo> {
@@ -134,6 +134,6 @@ export class HttpApi {
     if (!response.ok) {
       throw new Error(`Failed to fetch system info: ${response.statusText}`)
     }
-    return response.json()
+    return (await response.json()) as SystemInfo
   }
 }

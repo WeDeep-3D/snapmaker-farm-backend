@@ -1,6 +1,7 @@
 import { log } from '@/log'
 
-import { checkIsMoonrakerDevice, generateIpsToCheck } from './utils'
+
+import { checkIsMoonrakerDevice } from '@/utils/api'
 
 export type ScanProgress = {
   done: boolean
@@ -21,8 +22,8 @@ export class DeviceScanner {
   private _notify: (() => void) | null = null
   private _finished = false
 
-  constructor(beginIpNumber: bigint, endIpNumber: bigint) {
-    this._ipsToCheck = generateIpsToCheck(beginIpNumber, endIpNumber)
+  constructor(ipsToCheck: string[]) {
+    this._ipsToCheck = ipsToCheck
   }
 
   async *scan(): AsyncGenerator<ScanProgress> {

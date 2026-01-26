@@ -9,11 +9,6 @@ const specialRanges = [
   IPv4CidrRange.fromCidr('240.0.0.0/4'),
 ]
 
-export const checkInSpecialIpRange = (ipNumber: bigint) => {
-  const ip = IPv4.fromNumber(ipNumber)
-  return specialRanges.some((range) => range.contains(ip))
-}
-
 export const checkTcpPortOpen = async (
   ip: string,
   port: number,
@@ -37,4 +32,17 @@ export const checkTcpPortOpen = async (
     })
     socket.connect(port, ip)
   })
+}
+export const filterSpecialIps = (ipNumberSet: Set<bigint>): string[] => {
+  const ipsToCheck: string[] = []
+
+  for (const ipNumber of ipNumberSet) {
+    const ip = IPv4.fromNumber(ipNumber)
+    if (specialRanges.some((range) => range.contains(ip))) {
+      continue
+    }
+    ipsToCheck.push(IPv4.fromNumber(ipNumber).toString())
+  }
+
+  return ipsToCheck
 }

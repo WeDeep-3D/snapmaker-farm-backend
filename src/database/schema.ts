@@ -205,7 +205,7 @@ export const projects = pgTable(
       .default(sql`uuidv7()`)
       .primaryKey()
       .notNull(),
-    name: text(),
+    name: text().notNull(),
     description: text(),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow(),

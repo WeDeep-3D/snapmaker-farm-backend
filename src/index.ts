@@ -1,14 +1,20 @@
 import { Elysia, t } from 'elysia'
 import cors from '@elysiajs/cors'
-import openapi from '@elysiajs/openapi'
+import { fromTypes, openapi } from '@elysiajs/openapi'
 import staticPlugin from '@elysiajs/static'
 import { env } from '@yolk-oss/elysia-env'
 
+import packageJson from 'package.json'
 import { log } from '@/log'
-import { device } from '@/modules/device'
+import { devices } from '@/modules/devices'
+import { plates } from '@/modules/plates'
+import { projects } from '@/modules/projects'
+import { scans } from '@/modules/scans'
+
+const staticFilesPrefix = '/public'
 
 const app = new Elysia()
-  .use(cors())
+  .use(log.into())
   .use(
     env({
       DATABASE_URL: t.String({
@@ -17,10 +23,33 @@ const app = new Elysia()
       }),
     }),
   )
-  .use(log.into())
-  .use(openapi())
-  .use(staticPlugin())
-  .use(device)
+  .use(
+    openapi({
+      documentation: {
+        info: {
+          title: 'Snapmaker Farm API',
+          version: packageJson.version,
+          description:
+            'This is the API documentation for Snapmaker Farm, ' +
+            'a management system for Snapmaker 3D printers and devices.',
+        },
+      },
+      exclude: {
+        paths: [`${staticFilesPrefix}/*`],
+      },
+      references: fromTypes(
+        process.env.NODE_ENV === 'production'
+          ? 'dist/index.d.ts'
+          : 'src/index.ts',
+      ),
+    }),
+  )
+  .use(staticPlugin({ prefix: staticFilesPrefix }))
+  .use(cors())
+  .use(devices)
+  .use(plates)
+  .use(projects)
+  .use(scans)
   .listen(3000)
 
 log.info(`🦊 ElysiaJS is running at ${app.server?.url}`)

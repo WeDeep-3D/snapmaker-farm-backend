@@ -4,24 +4,25 @@ import { isIP } from 'node:net'
 import { db } from '@/database'
 import { devices } from '@/database/schema'
 import { log } from '@/log'
+import { checkIsMoonrakerDevice } from '@/utils/api'
+import { filterSpecialIps } from '@/utils/net'
 
 import { DeviceScanner, type ScanProgress } from './helper'
 import { SnapmakerDevice } from './snapmaker'
-import { checkIsMoonrakerDevice, checkIsSnapmakerDevice } from './utils'
 
 export abstract class Device {
   static async *scanDevices(
-    beginIpNumber: bigint,
-    endIpNumber: bigint,
+    ipNumberSet: Set<bigint>,
   ): AsyncGenerator<ScanProgress> {
-    const scanner = new DeviceScanner(beginIpNumber, endIpNumber)
+    const ipsToCheck = filterSpecialIps(ipNumberSet)
+    const scanner = new DeviceScanner(ipsToCheck)
     for await (const progress of scanner.scan()) {
       yield progress
     }
   }
 }
 
-export const deviceService = new Elysia({ name: 'device.service' })
+export const devicesService = new Elysia({ name: 'devices.service' })
   .state({
     connectedDevices: new Map<string, SnapmakerDevice>(),
     disconnectedDevices: new Map<string, typeof devices.$inferSelect>(),
@@ -37,7 +38,7 @@ export const deviceService = new Elysia({ name: 'device.service' })
           store.disconnectedDevices.set(device.id, device)
           return
         }
-        if (!(await checkIsSnapmakerDevice(ip))) {
+        if (!(await checkIsMoonrakerDevice(ip))) {
           store.unknownDevices.set(device.id, new SnapmakerDevice(ip, device))
           return
         }
