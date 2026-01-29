@@ -1,5 +1,5 @@
 import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
-import { t } from 'elysia'
+import { Elysia, t } from 'elysia'
 
 import { projects } from '@/database/schema'
 import { CommonModel } from '@/utils/model'
@@ -24,5 +24,13 @@ export namespace ProjectsModel {
   )
 
   export const createProjectReqBody = projectChangeableSchema
+  export type CreateProjectReqBody = typeof createProjectReqBody.static
+
   export const updateProjectReqBody = t.Partial(projectEditableSchema)
+  export type UpdateProjectReqBody = typeof updateProjectReqBody.static
 }
+
+export const projectsModel = new Elysia({ name: 'projects.model' }).model({
+  ...ProjectsModel,
+  errorRespBody: CommonModel.errorRespBody,
+})

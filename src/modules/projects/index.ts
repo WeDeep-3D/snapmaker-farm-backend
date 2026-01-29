@@ -1,15 +1,15 @@
 import { Elysia } from 'elysia'
 
-import { CommonModel } from '@/utils/model'
-
-import { ProjectsModel } from './model'
-import { Project, projectsService } from './service'
 import { buildErrorResponse } from '@/utils/common'
+
+import { projectsModel } from './model'
+import { Project, projectsService } from './service'
 
 export const projects = new Elysia({
   prefix: '/api/v1/projects',
   tags: ['Project'],
 })
+  .use(projectsModel)
   .use(projectsService)
   .post(
     '/',
@@ -21,10 +21,10 @@ export const projects = new Elysia({
       }
     },
     {
-      body: ProjectsModel.createProjectReqBody,
+      body: 'createProjectReqBody',
       response: {
-        200: ProjectsModel.fullSingleProjectRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSingleProjectRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -39,8 +39,8 @@ export const projects = new Elysia({
     },
     {
       response: {
-        200: ProjectsModel.fullMultipleProjectsRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullMultipleProjectsRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -55,9 +55,9 @@ export const projects = new Elysia({
     },
     {
       response: {
-        200: ProjectsModel.fullSingleProjectRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSingleProjectRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -71,11 +71,11 @@ export const projects = new Elysia({
       }
     },
     {
-      body: ProjectsModel.updateProjectReqBody,
+      body: 'updateProjectReqBody',
       response: {
-        200: ProjectsModel.fullSingleProjectRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSingleProjectRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -90,9 +90,9 @@ export const projects = new Elysia({
     },
     {
       response: {
-        200: ProjectsModel.fullSingleProjectRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSingleProjectRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )

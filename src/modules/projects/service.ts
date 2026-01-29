@@ -4,14 +4,12 @@ import { Elysia } from 'elysia'
 import { db } from '@/database'
 import { projects } from '@/database/schema'
 import { log } from '@/log'
-
-import type { ProjectsModel } from './model'
 import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
+import type { ProjectsModel } from './model'
+
 export abstract class Project {
-  static async createProject(
-    data: typeof ProjectsModel.createProjectReqBody.static,
-  ) {
+  static async createProject(data: ProjectsModel.CreateProjectReqBody) {
     try {
       const insertedProject = (
         await db.insert(projects).values(data).returning()
@@ -53,7 +51,7 @@ export abstract class Project {
   }
   static async updateProject(
     projectId: string,
-    data: typeof ProjectsModel.updateProjectReqBody.static,
+    data: ProjectsModel.UpdateProjectReqBody,
   ) {
     try {
       const updatedProject = (
