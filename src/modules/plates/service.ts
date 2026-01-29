@@ -1,25 +1,23 @@
 import { eq } from 'drizzle-orm'
-import { Elysia, status } from 'elysia'
+import { Elysia } from 'elysia'
 
 import { db } from '@/database'
 import { plates } from '@/database/schema'
 import { log } from '@/log'
 
 import { PlatesModel } from './model'
+import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
 export abstract class Plates {
-  static async createPlate(data: typeof PlatesModel.createPlateReqBody.static) {
+  static async createPlate(data: PlatesModel.CreatePlateReqBody) {
     try {
       const insertedPlate = (
         await db.insert(plates).values(data).returning()
       )[0]
       if (!insertedPlate) {
-        return status(500, {
-          success: false,
-          message: 'Failed to create plate',
-        })
+        return buildErrorResponse(500, 'Failed to create plate')
       }
-      return status(200, { success: true, data: insertedPlate })
+      return buildSuccessResponse(insertedPlate)
     } catch (error) {
       log.error(error, 'Database error while creating plate')
       throw error
@@ -31,9 +29,9 @@ export abstract class Plates {
         await db.select().from(plates).where(eq(plates.id, plateId)).limit(1)
       )[0]
       if (!selectedPlate) {
-        return status(404, { success: false, message: 'Plate not found' })
+        return buildErrorResponse(404, 'Plate not found')
       }
-      return status(200, { success: true, data: selectedPlate })
+      return buildSuccessResponse(selectedPlate)
     } catch (error) {
       log.error(error, 'Database error while fetching plate')
       throw error
@@ -52,9 +50,9 @@ export abstract class Plates {
           .returning()
       )[0]
       if (!updatedPlate) {
-        return status(404, { success: false, message: 'Plate not found' })
+        return buildErrorResponse(404, 'Plate not found')
       }
-      return status(200, { success: true, data: updatedPlate })
+      return buildSuccessResponse(updatedPlate)
     } catch (error) {
       log.error(error, 'Database error while updating plate')
       throw error
@@ -66,9 +64,9 @@ export abstract class Plates {
         await db.delete(plates).where(eq(plates.id, plateId)).returning()
       )[0]
       if (!deletedPlate) {
-        return status(404, { success: false, message: 'Plate not found' })
+        return buildErrorResponse(404, 'Plate not found')
       }
-      return status(200, { success: true, data: deletedPlate })
+      return buildSuccessResponse(deletedPlate)
     } catch (error) {
       log.error(error, 'Database error while deleting plate')
       throw error

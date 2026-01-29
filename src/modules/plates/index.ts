@@ -1,11 +1,10 @@
 import { Elysia, status, t } from 'elysia'
 
-import { CommonModel } from '@/utils/model'
-
-import { PlatesModel } from './model'
+import { platesModel } from './model'
 import { Plates, platesService } from './service'
 
 export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
+  .use(platesModel)
   .use(platesService)
   .post(
     '/',
@@ -20,10 +19,10 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       }
     },
     {
-      body: PlatesModel.createPlateReqBody,
+      body: 'createPlateReqBody',
       response: {
-        200: PlatesModel.fullSinglePlateRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSinglePlateRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -44,9 +43,9 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
         plateId: t.String({ format: 'uuid' }),
       }),
       response: {
-        200: PlatesModel.fullSinglePlateRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSinglePlateRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -63,11 +62,11 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       }
     },
     {
-      body: PlatesModel.updatePlateReqBody,
+      body: 'updatePlateReqBody',
       response: {
-        200: PlatesModel.fullSinglePlateRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSinglePlateRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -85,9 +84,9 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
     },
     {
       response: {
-        200: PlatesModel.fullSinglePlateRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'fullSinglePlateRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )

@@ -1,5 +1,5 @@
 import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
-import { t } from 'elysia'
+import { Elysia, t } from 'elysia'
 
 import { plates } from '@/database/schema'
 import { CommonModel } from '@/utils/model'
@@ -27,5 +27,11 @@ export namespace PlatesModel {
   export const fullSinglePlateRespBody = buildSuccessRespBody(plateSelectSchema)
 
   export const createPlateReqBody = plateChangeableSchema
+  export type CreatePlateReqBody = typeof createPlateReqBody.static
   export const updatePlateReqBody = t.Partial(plateEditableSchema)
 }
+
+export const platesModel = new Elysia({ name: 'plates.model' }).model({
+  ...PlatesModel,
+  errorRespBody: CommonModel.errorRespBody,
+})
