@@ -5,22 +5,10 @@ import { db } from '@/database'
 import { devices } from '@/database/schema'
 import { log } from '@/log'
 import { checkIsMoonrakerDevice } from '@/utils/api'
-import { filterSpecialIps } from '@/utils/net'
 
-import { DeviceScanner, type ScanProgress } from './helper'
 import { SnapmakerDevice } from './snapmaker'
 
-export abstract class Device {
-  static async *scanDevices(
-    ipNumberSet: Set<bigint>,
-  ): AsyncGenerator<ScanProgress> {
-    const ipsToCheck = filterSpecialIps(ipNumberSet)
-    const scanner = new DeviceScanner(ipsToCheck)
-    for await (const progress of scanner.scan()) {
-      yield progress
-    }
-  }
-}
+export abstract class Device {}
 
 export const devicesService = new Elysia({ name: 'devices.service' })
   .state({

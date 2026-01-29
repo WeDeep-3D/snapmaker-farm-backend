@@ -1,8 +1,6 @@
-import { Elysia, status } from 'elysia'
+import { Elysia } from 'elysia'
 
-import { Device, devicesService } from './service'
-
-const MAX_RANGE = BigInt(65536)
+import { devicesService } from './service'
 
 export const devices = new Elysia({
   prefix: '/api/v1/devices',
