@@ -1,11 +1,12 @@
-import { Elysia, status } from 'elysia'
+import { Elysia } from 'elysia'
 
-import { CommonModel } from '@/utils/model'
+import { buildErrorResponse } from '@/utils/common'
 
-import { ScansModel } from './model'
+import { scansModel } from './model'
 import { Scans, scansService } from './service'
 
 export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
+  .use(scansModel)
   .use(scansService)
   .post(
     '/',
@@ -13,18 +14,15 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.createScan(body)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
-      body: ScansModel.createScanReqBody,
+      body: 'createScanReqBody',
       response: {
-        200: ScansModel.createScanRespBody,
-        422: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'createScanRespBody',
+        422: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -34,16 +32,13 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.getAllScans()
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
       response: {
-        200: ScansModel.getAllScansRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'getAllScansRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -53,17 +48,14 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.getScan(params.scanId)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
       response: {
-        200: ScansModel.getScanRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'getScanRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -73,17 +65,14 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.updateScan(body)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
-      body: ScansModel.updateScanReqBody,
+      body: 'updateScanReqBody',
       response: {
-        200: ScansModel.updateScanRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'updateScanRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -93,16 +82,13 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.deleteAllScans()
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
       response: {
-        200: ScansModel.deleteAllScansRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'deleteAllScansRespBody',
+        500: 'errorRespBody',
       },
     },
   )
@@ -112,17 +98,14 @@ export const scans = new Elysia({ prefix: '/api/v1/scans', tags: ['Scans'] })
       try {
         return Scans.deleteScan(params.scanId)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
       response: {
-        200: ScansModel.deleteScanRespBody,
-        404: CommonModel.errorRespBody,
-        500: CommonModel.errorRespBody,
+        200: 'deleteScanRespBody',
+        404: 'errorRespBody',
+        500: 'errorRespBody',
       },
     },
   )

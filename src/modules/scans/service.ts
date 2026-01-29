@@ -1,18 +1,18 @@
 import { Elysia } from 'elysia'
 
+import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
+import { filterSpecialIps } from '@/utils/net'
+
 import { ScansHelper } from './helper'
 import type { ScansModel } from './model'
 import { ipRangesToNumberSet } from './utils'
-
-import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
-import { filterSpecialIps } from '@/utils/net'
 
 const scanHelper = new ScansHelper()
 
 export abstract class Scans {
   private static _maxCount = 65535n
 
-  static async createScan(ranges: typeof ScansModel.createScanReqBody.static) {
+  static async createScan(ranges: ScansModel.CreateScanReqBody) {
     let ipsToCheck: string[]
     try {
       ipsToCheck = filterSpecialIps(
@@ -40,7 +40,7 @@ export abstract class Scans {
     })
   }
 
-  static async updateScan(config: typeof ScansModel.updateScanReqBody.static) {
+  static async updateScan(config: ScansModel.UpdateScanReqBody) {
     if (config.concurrency !== undefined) {
       scanHelper.concurrency = config.concurrency
     }

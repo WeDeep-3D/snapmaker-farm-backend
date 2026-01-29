@@ -1,8 +1,10 @@
-import { t } from 'elysia'
+import { Elysia, t } from 'elysia'
+
 import { CommonModel } from '@/utils/model'
 
 export namespace ScansModel {
   import buildSuccessRespBody = CommonModel.buildSuccessRespBody
+
   export const createScanReqBody = t.Array(
     t.Union([
       t.Object({
@@ -17,9 +19,11 @@ export namespace ScansModel {
       }),
     ]),
   )
+  export type CreateScanReqBody = typeof createScanReqBody.static
   export const createScanRespBody = buildSuccessRespBody(
     t.String({ format: 'uuid' }),
   )
+
   export const getAllScansRespBody = buildSuccessRespBody(
     t.Object({
       concurrency: t.Number(),
@@ -38,6 +42,7 @@ export namespace ScansModel {
       ),
     }),
   )
+
   export const getScanRespBody = buildSuccessRespBody(
     t.Object({
       queuedCount: t.Number(),
@@ -45,18 +50,24 @@ export namespace ScansModel {
       totalCount: t.Number(),
     }),
   )
+
   export const updateScanReqBody = t.Object({
     concurrency: t.Optional(t.Number({ minimum: 1, maximum: 1000 })),
     timeout: t.Optional(t.Number({ minimum: 100, maximum: 60000 })),
   })
+  export type UpdateScanReqBody = typeof updateScanReqBody.static
   export const updateScanRespBody = buildSuccessRespBody(
     t.Object({
       concurrency: t.Number(),
       timeout: t.Number(),
     }),
   )
-  export const deleteAllScansRespBody = buildSuccessRespBody(
-    t.Number(),
-  )
+
+  export const deleteAllScansRespBody = buildSuccessRespBody(t.Number())
   export const deleteScanRespBody = buildSuccessRespBody()
 }
+
+export const scansModel = new Elysia({ name: 'scans.model' }).model({
+  ...ScansModel,
+  errorRespBody: CommonModel.errorRespBody,
+})
