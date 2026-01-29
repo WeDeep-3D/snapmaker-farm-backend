@@ -50,6 +50,10 @@ const app = new Elysia()
   .use(plates)
   .use(projects)
   .use(scans)
+  .onError((ctx) => {
+    ctx.log?.error(ctx, ctx.error.toString())
+    return 'onError'
+  })
   .listen(3000)
 
 log.info(`🦊 ElysiaJS is running at ${app.server?.url}`)

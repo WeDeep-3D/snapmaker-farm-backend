@@ -1,6 +1,13 @@
-import { KlippyState } from './types'
+export enum KlippyState {
+  disconnected = 'disconnected',
+  error = 'error',
+  ready = 'ready',
+  shutdown = 'shutdown',
+  startup = 'startup',
+  unknown = 'unknown',
+}
 
-interface MoonrakerInfo {
+export interface GetMoonrakerInfoResp {
   result: {
     klippy_connected: boolean
     klippy_state: KlippyState
@@ -16,7 +23,7 @@ interface MoonrakerInfo {
   }
 }
 
-interface SystemInfo {
+export interface GetSystemInfoResp {
   result: {
     system_info: {
       python: {
@@ -113,27 +120,10 @@ interface SystemInfo {
   }
 }
 
-export class HttpApi {
-  private readonly _baseUrl: string
-
-  constructor(ip: string) {
-    // noinspection HttpUrlsUsage
-    this._baseUrl = `http://${ip}:7125`
-  }
-
-  async getMoonrakerInfo(): Promise<MoonrakerInfo> {
-    const response = await fetch(`${this._baseUrl}/server/info`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Moonraker info: ${response.statusText}`)
-    }
-    return (await response.json()) as MoonrakerInfo
-  }
-
-  async getSystemInfo(): Promise<SystemInfo> {
-    const response = await fetch(`${this._baseUrl}/machine/system_info`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch system info: ${response.statusText}`)
-    }
-    return (await response.json()) as SystemInfo
-  }
+export interface ListRegisteredRootsResp {
+  result: {
+    name: string
+    path: string
+    permissions: string
+  }[]
 }

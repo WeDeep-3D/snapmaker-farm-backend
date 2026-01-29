@@ -1,3 +1,4 @@
 import { checkTcpPortOpen } from '@/utils/net'
 
-import { HttpApi } from './snapmaker/api'
+
+import { HttpApi } from '@/utils/api/snapmaker'

@@ -145,7 +145,11 @@ export class ScansHelper {
     const startIndex = lastIndex >= 0 ? (lastIndex + 1) % entries.length : 0
 
     for (let i = 0; i < entries.length; i++) {
-      const [taskId, task] = entries[(startIndex + i) % entries.length]
+      const entry = entries[(startIndex + i) % entries.length]
+      if (!entry) {
+        continue
+      }
+      const [taskId, task] = entry
       const ip = task.queued.shift()
       if (ip !== undefined) {
         this._lastTaskId = taskId

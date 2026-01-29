@@ -58,9 +58,9 @@ export class DeviceScanner {
     }
   }
 
-  private get _nextIp(): string | null {
+  private get _nextIp(): string | undefined {
     if (this._nextIndex >= this._ipsToCheck.length) {
-      return null
+      return
     }
     return this._ipsToCheck[this._nextIndex++]
   }
