@@ -1,5 +1,6 @@
-import { Elysia, status, t } from 'elysia'
+import { Elysia, t } from 'elysia'
 
+import { buildErrorResponse } from '@/utils/common'
 import { platesModel } from './model'
 import { Plates, platesService } from './service'
 
@@ -12,10 +13,7 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       try {
         return Plates.createPlate(body)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
@@ -32,10 +30,7 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       try {
         return Plates.getPlate(params.plateId)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
@@ -55,10 +50,7 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       try {
         return Plates.updatePlate(params.plateId, body)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {
@@ -76,10 +68,7 @@ export const plates = new Elysia({ prefix: '/api/v1/plates', tags: ['Plates'] })
       try {
         return Plates.deletePlate(params.plateId)
       } catch (error) {
-        return status(500, {
-          success: false,
-          message: (error as Error).message,
-        })
+        return buildErrorResponse(500, (error as Error).message)
       }
     },
     {

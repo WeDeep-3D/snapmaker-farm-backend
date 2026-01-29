@@ -29,6 +29,7 @@ export namespace PlatesModel {
   export const createPlateReqBody = plateChangeableSchema
   export type CreatePlateReqBody = typeof createPlateReqBody.static
   export const updatePlateReqBody = t.Partial(plateEditableSchema)
+  export type UpdatePlateReqBody = typeof updatePlateReqBody.static
 }
 
 export const platesModel = new Elysia({ name: 'plates.model' }).model({

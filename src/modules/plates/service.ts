@@ -4,9 +4,9 @@ import { Elysia } from 'elysia'
 import { db } from '@/database'
 import { plates } from '@/database/schema'
 import { log } from '@/log'
+import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
 import { PlatesModel } from './model'
-import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
 export abstract class Plates {
   static async createPlate(data: PlatesModel.CreatePlateReqBody) {
@@ -39,7 +39,7 @@ export abstract class Plates {
   }
   static async updatePlate(
     plateId: string,
-    data: typeof PlatesModel.updatePlateReqBody.static,
+    data: PlatesModel.UpdatePlateReqBody,
   ) {
     try {
       const updatedPlate = (
