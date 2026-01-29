@@ -8,7 +8,7 @@
     "format:check": "prettier --check \"./src*/**/*.{ts,js,cjs,mjs,json,md}\"",
     "lint": "eslint -c ./eslint.config.mjs \"./src*/**/*.{ts,js,cjs,mjs}\"",
     "lint:fix": "eslint -c ./eslint.config.mjs --fix \"./src*/**/*.{ts,js,cjs,mjs}\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:scanner-cli:build": "bun build --compile --minify --sourcemap --bytecode ./test/scanner-cli.ts --outfile ./build/scanner-cli",
     "dev": "bun run --watch src/index.ts | pino-pretty -c -t SYS:standard -S",
     "docker-dev:create": "docker compose -f compose.dev.yaml up --build --force-recreate -d",
     "docker-dev:up": "docker compose -f compose.dev.yaml up -d",
