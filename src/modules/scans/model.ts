@@ -1,11 +1,9 @@
 import { Elysia, t } from 'elysia'
 
-import { CommonModel } from '@/utils/model'
+import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 
-export namespace ScansModel {
-  import buildSuccessRespBody = CommonModel.buildSuccessRespBody
-
-  export const createScanReqBody = t.Array(
+export const scansModel = new Elysia({ name: 'scans.model' }).model({
+  createScanReqBody: t.Array(
     t.Union([
       t.Object({
         begin: t.String({ format: 'ipv4' }),
@@ -18,13 +16,9 @@ export namespace ScansModel {
         }),
       }),
     ]),
-  )
-  export type CreateScanReqBody = typeof createScanReqBody.static
-  export const createScanRespBody = buildSuccessRespBody(
-    t.String({ format: 'uuid' }),
-  )
-
-  export const getAllScansRespBody = buildSuccessRespBody(
+  ),
+  createScanRespBody: buildSuccessRespBody(t.String({ format: 'uuid' })),
+  getAllScansRespBody: buildSuccessRespBody(
     t.Object({
       concurrency: t.Number(),
       timeout: t.Number(),
@@ -41,33 +35,30 @@ export namespace ScansModel {
         }),
       ),
     }),
-  )
-
-  export const getScanRespBody = buildSuccessRespBody(
+  ),
+  getScanRespBody: buildSuccessRespBody(
     t.Object({
       queuedCount: t.Number(),
       recognized: t.Array(t.String({ format: 'ipv4' })),
       totalCount: t.Number(),
     }),
-  )
-
-  export const updateScanReqBody = t.Object({
+  ),
+  updateScanReqBody: t.Object({
     concurrency: t.Optional(t.Number({ minimum: 1, maximum: 1000 })),
     timeout: t.Optional(t.Number({ minimum: 100, maximum: 60000 })),
-  })
-  export type UpdateScanReqBody = typeof updateScanReqBody.static
-  export const updateScanRespBody = buildSuccessRespBody(
+  }),
+  updateScanRespBody: buildSuccessRespBody(
     t.Object({
       concurrency: t.Number(),
       timeout: t.Number(),
     }),
-  )
-
-  export const deleteAllScansRespBody = buildSuccessRespBody(t.Number())
-  export const deleteScanRespBody = buildSuccessRespBody()
-}
-
-export const scansModel = new Elysia({ name: 'scans.model' }).model({
-  ...ScansModel,
-  errorRespBody: CommonModel.errorRespBody,
+  ),
+  deleteAllScansRespBody: buildSuccessRespBody(t.Number()),
+  deleteScanRespBody: buildSuccessRespBody(),
+  errorRespBody,
 })
+
+export type CreateScanReqBody =
+  typeof scansModel.models.createScanReqBody.schema.static
+export type UpdateScanReqBody =
+  typeof scansModel.models.updateScanReqBody.schema.static

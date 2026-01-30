@@ -1,9 +1,9 @@
-import { t } from 'elysia'
+import { Elysia, t } from 'elysia'
 
-import { buildSuccessResponse } from '@/utils/common'
+import { buildSuccessRespBody } from '@/utils/model'
 
-export namespace DevicesModel {
-  export const getAllDevicesRespBody = buildSuccessResponse(
+export const devicesModel = new Elysia({ name: 'devices.model' }).model({
+  getAllDevicesRespBody: buildSuccessRespBody(
     t.Array(
       t.Object({
         id: t.String({ format: 'uuid' }),
@@ -13,5 +13,5 @@ export namespace DevicesModel {
         lastSeen: t.String({ format: 'date-time' }),
       }),
     ),
-  )
-}
+  ),
+})

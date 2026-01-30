@@ -2,7 +2,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 import { Elysia, t } from 'elysia'
 
 import { projects } from '@/database/schema'
-import { CommonModel } from '@/utils/model'
+import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 
 const projectSelectSchema = createSelectSchema(projects)
 const projectInsertSchema = createInsertSchema(projects)
@@ -14,23 +14,17 @@ const projectChangeableSchema = t.Omit(projectInsertSchema, [
 ])
 const projectEditableSchema = t.Omit(projectChangeableSchema, [])
 
-export namespace ProjectsModel {
-  import buildSuccessRespBody = CommonModel.buildSuccessRespBody
-
-  export const fullSingleProjectRespBody =
-    buildSuccessRespBody(projectSelectSchema)
-  export const fullMultipleProjectsRespBody = buildSuccessRespBody(
-    t.Array(projectSelectSchema),
-  )
-
-  export const createProjectReqBody = projectChangeableSchema
-  export type CreateProjectReqBody = typeof createProjectReqBody.static
-
-  export const updateProjectReqBody = t.Partial(projectEditableSchema)
-  export type UpdateProjectReqBody = typeof updateProjectReqBody.static
-}
-
 export const projectsModel = new Elysia({ name: 'projects.model' }).model({
-  ...ProjectsModel,
-  errorRespBody: CommonModel.errorRespBody,
+  fullSingleProjectRespBody: buildSuccessRespBody(projectSelectSchema),
+  fullMultipleProjectsRespBody: buildSuccessRespBody(
+    t.Array(projectSelectSchema),
+  ),
+  createProjectReqBody: projectChangeableSchema,
+  updateProjectReqBody: t.Partial(projectEditableSchema),
+  errorRespBody,
 })
+
+export type CreateProjectReqBody =
+  typeof projectsModel.models.createProjectReqBody.schema.static
+export type UpdateProjectReqBody =
+  typeof projectsModel.models.updateProjectReqBody.schema.static

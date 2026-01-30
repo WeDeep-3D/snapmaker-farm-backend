@@ -2,7 +2,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 import { Elysia, t } from 'elysia'
 
 import { plates } from '@/database/schema'
-import { CommonModel } from '@/utils/model'
+import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 
 const plateInsertSchema = createInsertSchema(plates)
 const plateSelectSchema = createSelectSchema(plates)
@@ -21,18 +21,14 @@ const plateEditableSchema = t.Omit(plateChangeableSchema, [
   'fileId',
 ])
 
-export namespace PlatesModel {
-  import buildSuccessRespBody = CommonModel.buildSuccessRespBody
-
-  export const fullSinglePlateRespBody = buildSuccessRespBody(plateSelectSchema)
-
-  export const createPlateReqBody = plateChangeableSchema
-  export type CreatePlateReqBody = typeof createPlateReqBody.static
-  export const updatePlateReqBody = t.Partial(plateEditableSchema)
-  export type UpdatePlateReqBody = typeof updatePlateReqBody.static
-}
-
 export const platesModel = new Elysia({ name: 'plates.model' }).model({
-  ...PlatesModel,
-  errorRespBody: CommonModel.errorRespBody,
+  fullSinglePlateRespBody: buildSuccessRespBody(plateSelectSchema),
+  createPlateReqBody: plateChangeableSchema,
+  updatePlateReqBody: t.Partial(plateEditableSchema),
+  errorRespBody,
 })
+
+export type CreatePlateReqBody =
+  typeof platesModel.models.createPlateReqBody.schema.static
+export type UpdatePlateReqBody =
+  typeof platesModel.models.updatePlateReqBody.schema.static

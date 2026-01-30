@@ -1,5 +1,6 @@
-import type { CommonModel } from '@/utils/model'
 import { ElysiaCustomStatusResponse, status } from 'elysia'
+
+import { errorRespBody } from '@/utils/model'
 
 export function generateSequence(begin: number, end: number): Generator<number>
 export function generateSequence(begin: bigint, end: bigint): Generator<bigint>
@@ -31,7 +32,7 @@ export function* generateSequence(
   }
 }
 
-export const buildSuccessResponse = <T extends Object>(data?: T) => {
+export const buildSuccessResponse = <T>(data?: T) => {
   return status(200, {
     success: true as const,
     data,
@@ -41,7 +42,7 @@ export const buildSuccessResponse = <T extends Object>(data?: T) => {
 export const buildErrorResponse = <Code extends Parameters<typeof status>[0]>(
   code: Code,
   message: string,
-): ElysiaCustomStatusResponse<Code, typeof CommonModel.errorRespBody.static> =>
+): ElysiaCustomStatusResponse<Code, typeof errorRespBody.static> =>
   status(code, {
     success: false,
     message,

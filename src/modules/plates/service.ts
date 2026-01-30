@@ -6,10 +6,10 @@ import { plates } from '@/database/schema'
 import { log } from '@/log'
 import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
-import { PlatesModel } from './model'
+import type { CreatePlateReqBody, UpdatePlateReqBody } from './model'
 
 export abstract class Plates {
-  static async createPlate(data: PlatesModel.CreatePlateReqBody) {
+  static async createPlate(data: CreatePlateReqBody) {
     try {
       const insertedPlate = (
         await db.insert(plates).values(data).returning()
@@ -37,10 +37,7 @@ export abstract class Plates {
       throw error
     }
   }
-  static async updatePlate(
-    plateId: string,
-    data: PlatesModel.UpdatePlateReqBody,
-  ) {
+  static async updatePlate(plateId: string, data: UpdatePlateReqBody) {
     try {
       const updatedPlate = (
         await db

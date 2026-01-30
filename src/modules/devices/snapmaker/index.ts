@@ -1,9 +1,9 @@
+import { HttpApi } from '@/api/snapmaker'
+import { KlippyState } from '@/api/snapmaker/types'
 import type { devices } from '@/database/schema'
 import { log } from '@/log'
-import { HttpApi } from '@/api/snapmaker'
 
 import { PrintState } from './types'
-import { KlippyState } from '@/api/snapmaker/types'
 
 export class SnapmakerDevice {
   private _klippyState: KlippyState = KlippyState.unknown

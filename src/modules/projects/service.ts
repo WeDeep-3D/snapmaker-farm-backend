@@ -6,10 +6,10 @@ import { projects } from '@/database/schema'
 import { log } from '@/log'
 import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 
-import type { ProjectsModel } from './model'
+import type { CreateProjectReqBody, UpdateProjectReqBody } from './model'
 
 export abstract class Project {
-  static async createProject(data: ProjectsModel.CreateProjectReqBody) {
+  static async createProject(data: CreateProjectReqBody) {
     try {
       const insertedProject = (
         await db.insert(projects).values(data).returning()
@@ -49,10 +49,7 @@ export abstract class Project {
       throw error
     }
   }
-  static async updateProject(
-    projectId: string,
-    data: ProjectsModel.UpdateProjectReqBody,
-  ) {
+  static async updateProject(projectId: string, data: UpdateProjectReqBody) {
     try {
       const updatedProject = (
         await db

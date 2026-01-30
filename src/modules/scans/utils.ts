@@ -13,7 +13,7 @@ export const checkIsMoonrakerDevice = async (ip: string, timeout = 2000) => {
     const httpApi = new HttpApi(ip)
     const moonrakerInfo = await httpApi.getMoonrakerInfo()
     return !!moonrakerInfo.result.moonraker_version.length
-  } catch (error) {
+  } catch {
     return false
   }
 }
