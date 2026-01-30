@@ -1,6 +1,6 @@
 import { ScansHelper } from '@/modules/scans/helper'
 import { ipRangesToNumberSet } from '@/modules/scans/utils'
-import { HttpApi } from '@/utils/api/snapmaker'
+import { HttpApi } from '@/api/snapmaker'
 import { filterSpecialIps } from '@/utils/net'
 
 const bgColorYellow = '\x1b[43m'

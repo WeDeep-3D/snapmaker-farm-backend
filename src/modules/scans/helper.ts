@@ -1,7 +1,7 @@
 import { log } from '@/log'
 
-import { checkIsMoonrakerDevice } from '@/utils/api'
 import { generateSequence } from '@/utils/common'
+import { checkIsMoonrakerDevice } from '@/modules/scans/utils'
 
 interface Task {
   queued: string[]

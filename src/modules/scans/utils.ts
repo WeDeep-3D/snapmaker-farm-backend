@@ -1,6 +1,22 @@
 import { IPv4, IPv4CidrRange } from 'ip-num'
 
+import { HttpApi } from '@/api/snapmaker'
 import { generateSequence } from '@/utils/common'
+import { checkTcpPortOpen } from '@/utils/net'
+
+export const checkIsMoonrakerDevice = async (ip: string, timeout = 2000) => {
+  try {
+    if (!(await checkTcpPortOpen(ip, 7125, timeout))) {
+      return false
+    }
+    // noinspection HttpUrlsUsage
+    const httpApi = new HttpApi(ip)
+    const moonrakerInfo = await httpApi.getMoonrakerInfo()
+    return !!moonrakerInfo.result.moonraker_version.length
+  } catch (error) {
+    return false
+  }
+}
 
 export const ipRangesToNumberSet = (
   ranges: ({ cidr: string } | { begin: string; end: string })[],
