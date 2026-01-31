@@ -28,18 +28,12 @@ export const devicesService = new Elysia({ name: 'devices.service' })
           return
         }
         try {
-          if (
-            (await new HttpApi(ip).getMoonrakerInfo()).result?.moonraker_version
-              .length
-          ) {
-            store.connectedDevices.set(
-              device.id,
-              new SnapmakerDevice(ip, device),
-            )
+          if ((await new HttpApi(ip).getMoonrakerInfo()).result?.moonraker_version.length) {
+            store.connectedDevices.set(device.id, new SnapmakerDevice(ip, device))
           } else {
             store.unknownDevices.set(device.id, new SnapmakerDevice(ip, device))
           }
-        } catch (_) {
+        } catch {
           store.unknownDevices.set(device.id, new SnapmakerDevice(ip, device))
         }
       }),
