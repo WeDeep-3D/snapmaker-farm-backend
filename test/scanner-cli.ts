@@ -37,6 +37,7 @@ const main = async () => {
       if (!task) {
         throw new Error('Task disappeared while waiting for completion')
       }
+      console.log(task)
       if (task.queued.length === 0) {
         return task
       }
@@ -52,13 +53,9 @@ const main = async () => {
         const {
           result: { system_info },
         } = await httpApi.getSystemInfo()
-        const networkInterface = Object.entries(system_info.network).find(
-          ([_, interfaceInfo]) => {
-            return interfaceInfo.ip_addresses.some(
-              (address) => address.address === ip,
-            )
-          },
-        )
+        const networkInterface = Object.entries(system_info.network).find(([_, interfaceInfo]) => {
+          return interfaceInfo.ip_addresses.some((address) => address.address === ip)
+        })
         if (networkInterface) {
           const [interfaceName, interfaceInfo] = networkInterface
           return {
@@ -91,9 +88,7 @@ const main = async () => {
       `${'设备名称'.padEnd(16)}${'连接方式'.padEnd(8)}${'IP地址'.padEnd(20)}${'MAC地址'.padEnd(20)}${'固件版本'.padEnd(8)}${'序列号'.padEnd(20)}`,
     )
 
-    for (const printResult of printResults.sort((a, b) =>
-      a.name.localeCompare(b.name),
-    )) {
+    for (const printResult of printResults.sort((a, b) => a.name.localeCompare(b.name))) {
       console.log(
         `${printResult.bgColor}${printResult.name.padEnd(16)}${printResult.interface.padEnd(8)}${printResult.ip.padEnd(20)}${printResult.mac.padEnd(20)}${printResult.version.padEnd(8)}${printResult.serial.padEnd(20)}${reset}`,
       )
