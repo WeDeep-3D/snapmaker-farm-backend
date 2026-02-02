@@ -38,7 +38,7 @@ const main = async () => {
         throw new Error('Task disappeared while waiting for completion')
       }
       console.log(task)
-      if (task.queued.length === 0) {
+      if (task.queued.length === 0 && task.inProgress.size === 0) {
         return task
       }
       await new Promise((resolve) => setTimeout(resolve, 250))

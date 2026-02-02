@@ -15,9 +15,7 @@ export abstract class Scans {
   static async createScan(ranges: CreateScanReqBody) {
     let ipsToCheck: string[]
     try {
-      ipsToCheck = filterSpecialIps(
-        ipRangesToNumberSet(ranges, Scans._maxCount),
-      )
+      ipsToCheck = filterSpecialIps(ipRangesToNumberSet(ranges, Scans._maxCount))
     } catch (error) {
       return buildErrorResponse(422, (error as Error).message)
     }
@@ -35,6 +33,7 @@ export abstract class Scans {
     }
     return buildSuccessResponse({
       queuedCount: scan.queued.length,
+      inProgressCount: scan.inProgress.size,
       recognized: scan.recognized,
       totalCount: scan.totalCount,
     })

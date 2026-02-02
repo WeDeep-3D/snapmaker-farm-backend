@@ -5,6 +5,7 @@ import { checkIsMoonrakerDevice } from './utils'
 
 interface Task {
   queued: string[]
+  inProgress: Set<string>
   recognized: string[]
   totalCount: number
 }
@@ -37,6 +38,7 @@ export class ScansHelper {
     const id = Bun.randomUUIDv7()
     this._tasks.set(id, {
       queued: queue,
+      inProgress: new Set<string>(),
       recognized: [],
       totalCount: queue.length,
     })
@@ -76,6 +78,7 @@ export class ScansHelper {
       tasks: Array.from(this._tasks).map(([taskId, task]) => ({
         id: taskId,
         queuedCount: task.queued.length,
+        inProgressCount: task.inProgress.size,
         recognizedCount: task.recognized.length,
         totalCount: task.totalCount,
       })),
@@ -131,9 +134,7 @@ export class ScansHelper {
   }
 
   private _dequeueNext(): { taskId: string; ip: string } | null {
-    const entries = Array.from(this._tasks.entries()).filter(
-      ([_, task]) => task.queued.length > 0,
-    )
+    const entries = Array.from(this._tasks.entries()).filter(([_, task]) => task.queued.length > 0)
     if (entries.length === 0) {
       this._lastTaskId = null
       return null
@@ -152,6 +153,7 @@ export class ScansHelper {
       const [taskId, task] = entry
       const ip = task.queued.shift()
       if (ip !== undefined) {
+        task.inProgress.add(ip)
         this._lastTaskId = taskId
         return { taskId, ip }
       }
@@ -167,23 +169,23 @@ export class ScansHelper {
       while (this._isRunning && this._runningWorker.has(workerId)) {
         const next = this._dequeueNext()
         if (!next) {
-          await new Promise<void>((resolve) =>
-            this._waitingPromises.push(resolve),
-          )
+          await new Promise<void>((resolve) => this._waitingPromises.push(resolve))
           continue
         }
         const { taskId, ip } = next
         try {
-          const isMoonrakerDevice = await checkIsMoonrakerDevice(
-            ip,
-            this._timeout,
-          )
+          const isMoonrakerDevice = await checkIsMoonrakerDevice(ip, this._timeout)
           const task = this._tasks.get(taskId)
-          if (task && isMoonrakerDevice) {
-            task.recognized.push(ip)
+          if (task) {
+            if (isMoonrakerDevice) {
+              task.recognized.push(ip)
+            }
+            task.inProgress.delete(ip)
           }
         } catch (error) {
           log.error(error)
+          const task = this._tasks.get(taskId)
+          task?.inProgress.delete(ip)
         }
       }
     } finally {

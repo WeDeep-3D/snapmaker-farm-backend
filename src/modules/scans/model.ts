@@ -39,6 +39,7 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
   getScanRespBody: buildSuccessRespBody(
     t.Object({
       queuedCount: t.Number(),
+      inProgressCount: t.Number(),
       recognized: t.Array(t.String({ format: 'ipv4' })),
       totalCount: t.Number(),
     }),
@@ -58,7 +59,5 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
   errorRespBody,
 })
 
-export type CreateScanReqBody =
-  typeof scansModel.models.createScanReqBody.schema.static
-export type UpdateScanReqBody =
-  typeof scansModel.models.updateScanReqBody.schema.static
+export type CreateScanReqBody = typeof scansModel.models.createScanReqBody.schema.static
+export type UpdateScanReqBody = typeof scansModel.models.updateScanReqBody.schema.static

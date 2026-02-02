@@ -7,7 +7,7 @@
     "format": "prettier --write \"./src*/**/*.{ts,js,cjs,mjs,json,md}\"",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "test:scanner-cli:build": "bun build --compile --minify --sourcemap --bytecode ./test/scanner-cli.ts --outfile ./build/scanner-cli",
+    "test:scanner-cli:build": "bun build --compile ./test/scanner-cli.ts --outfile ./build/scanner-cli",
     "dev": "bun run --watch src/index.ts | pino-pretty -c -t SYS:standard -S",
     "docker-dev:create": "docker compose -f compose.dev.yaml up --build --force-recreate -d",
     "docker-dev:up": "docker compose -f compose.dev.yaml up -d",
