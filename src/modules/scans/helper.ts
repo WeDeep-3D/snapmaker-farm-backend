@@ -6,6 +6,7 @@ import { checkIsMoonrakerDevice } from './utils'
 interface Task {
   queued: string[]
   inProgress: Set<string>
+  processed: number
   recognized: string[]
   totalCount: number
 }
@@ -39,6 +40,7 @@ export class ScansHelper {
     this._tasks.set(id, {
       queued: queue,
       inProgress: new Set<string>(),
+      processed: 0,
       recognized: [],
       totalCount: queue.length,
     })
@@ -79,6 +81,7 @@ export class ScansHelper {
         id: taskId,
         queuedCount: task.queued.length,
         inProgressCount: task.inProgress.size,
+        processedCount: task.processed,
         recognizedCount: task.recognized.length,
         totalCount: task.totalCount,
       })),
@@ -180,12 +183,16 @@ export class ScansHelper {
             if (isMoonrakerDevice) {
               task.recognized.push(ip)
             }
+            task.processed += 1
             task.inProgress.delete(ip)
           }
         } catch (error) {
           log.error(error)
           const task = this._tasks.get(taskId)
-          task?.inProgress.delete(ip)
+          if (task) {
+            task.processed += 1
+            task.inProgress.delete(ip)
+          }
         }
       }
     } finally {

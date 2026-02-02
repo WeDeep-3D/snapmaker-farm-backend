@@ -34,6 +34,7 @@ export abstract class Scans {
     return buildSuccessResponse({
       queuedCount: scan.queued.length,
       inProgressCount: scan.inProgress.size,
+      processedCount: scan.processed,
       recognized: scan.recognized,
       totalCount: scan.totalCount,
     })

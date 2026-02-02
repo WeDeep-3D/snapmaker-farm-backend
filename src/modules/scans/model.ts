@@ -30,6 +30,8 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
         t.Object({
           id: t.String({ format: 'uuid' }),
           queuedCount: t.Number(),
+          inProgressCount: t.Number(),
+          processedCount: t.Number(),
           recognizedCount: t.Number(),
           totalCount: t.Number(),
         }),
@@ -40,6 +42,7 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
     t.Object({
       queuedCount: t.Number(),
       inProgressCount: t.Number(),
+      processedCount: t.Number(),
       recognized: t.Array(t.String({ format: 'ipv4' })),
       totalCount: t.Number(),
     }),
