@@ -39,10 +39,7 @@ export const ipRangesToNumberSet = (
     if (maxCount > 0n && currentCount + BigInt(result.size) >= maxCount) {
       throw new RangeError(`Total IP count too large, max is ${maxCount}`)
     }
-    for (const ipNumber of generateSequence(
-      ipv4BeginNumber,
-      ipv4EndNumber + 1n,
-    )) {
+    for (const ipNumber of generateSequence(ipv4BeginNumber, ipv4EndNumber + 1n)) {
       result.add(ipNumber)
     }
   }

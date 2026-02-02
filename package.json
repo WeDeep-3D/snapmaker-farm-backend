@@ -4,7 +4,8 @@
   "type": "module",
   "module": "src/index.js",
   "scripts": {
-    "format": "prettier --write \"./src*/**/*.{ts,js,cjs,mjs,json,md}\"",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "test:scanner-cli:build": "bun build --compile ./test/scanner-cli.ts --outfile ./build/scanner-cli",

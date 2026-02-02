@@ -93,14 +93,8 @@ export const devices = pgTable(
     plateId: uuid('plate_id'),
   },
   (table) => [
-    index('idx_devices_id').using(
-      'btree',
-      table.id.asc().nullsLast().op('uuid_ops'),
-    ),
-    index('idx_devices_plate_id').using(
-      'btree',
-      table.plateId.asc().nullsLast().op('uuid_ops'),
-    ),
+    index('idx_devices_id').using('btree', table.id.asc().nullsLast().op('uuid_ops')),
+    index('idx_devices_plate_id').using('btree', table.plateId.asc().nullsLast().op('uuid_ops')),
     uniqueIndex('uq_devices_model_serial').on(table.model, table.serialNumber),
   ],
 )
@@ -134,10 +128,7 @@ export const filaments = pgTable(
     overrideConfig: jsonb('override_config').default({}),
   },
   (table) => [
-    index('idx_filaments_id').using(
-      'btree',
-      table.id.asc().nullsLast().op('uuid_ops'),
-    ),
+    index('idx_filaments_id').using('btree', table.id.asc().nullsLast().op('uuid_ops')),
     check('count_positive_check', sql`count > 0`),
     check('color_rgba_hex_check', sql`color ~ '^#[0-9a-fA-F]{8}$'::text`),
     check('density_positive_check', sql`density > (0.0)::double precision`),
@@ -165,14 +156,8 @@ export const plates = pgTable(
     weight: real().default(0),
   },
   (table) => [
-    index('idx_plates_id').using(
-      'btree',
-      table.id.asc().nullsLast().op('uuid_ops'),
-    ),
-    index('idx_plates_project_id').using(
-      'btree',
-      table.projectId.asc().nullsLast().op('uuid_ops'),
-    ),
+    index('idx_plates_id').using('btree', table.id.asc().nullsLast().op('uuid_ops')),
+    index('idx_plates_project_id').using('btree', table.projectId.asc().nullsLast().op('uuid_ops')),
   ],
 )
 
@@ -212,10 +197,5 @@ export const projects = pgTable(
     startTime: timestamp('start_time', { mode: 'string' }).defaultNow(),
     deliveryTime: timestamp('delivery_time', { mode: 'string' }),
   },
-  (table) => [
-    index('idx_projects_id').using(
-      'btree',
-      table.id.asc().nullsLast().op('uuid_ops'),
-    ),
-  ],
+  (table) => [index('idx_projects_id').using('btree', table.id.asc().nullsLast().op('uuid_ops'))],
 )

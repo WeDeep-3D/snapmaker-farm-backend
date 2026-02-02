@@ -38,9 +38,7 @@ const app = new Elysia()
         paths: [`${staticFilesPrefix}/*`],
       },
       references: fromTypes(
-        process.env.NODE_ENV === 'production'
-          ? 'dist/index.d.ts'
-          : 'src/index.ts',
+        process.env.NODE_ENV === 'production' ? 'dist/index.d.ts' : 'src/index.ts',
       ),
     }),
   )

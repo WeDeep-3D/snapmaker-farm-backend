@@ -9,11 +9,7 @@ const specialRanges = [
   IPv4CidrRange.fromCidr('240.0.0.0/4'),
 ]
 
-export const checkTcpPortOpen = async (
-  ip: string,
-  port: number,
-  timeout: number,
-) => {
+export const checkTcpPortOpen = async (ip: string, port: number, timeout: number) => {
   return new Promise((resolve) => {
     const socket = new Socket()
     socket.setTimeout(timeout)

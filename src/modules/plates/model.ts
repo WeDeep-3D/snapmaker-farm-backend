@@ -7,11 +7,7 @@ import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 const plateInsertSchema = createInsertSchema(plates)
 const plateSelectSchema = createSelectSchema(plates)
 
-const plateChangeableSchema = t.Omit(plateInsertSchema, [
-  'id',
-  'createdAt',
-  'updatedAt',
-])
+const plateChangeableSchema = t.Omit(plateInsertSchema, ['id', 'createdAt', 'updatedAt'])
 const plateEditableSchema = t.Omit(plateChangeableSchema, [
   'projectId',
   'completedCount',
@@ -28,7 +24,5 @@ export const platesModel = new Elysia({ name: 'plates.model' }).model({
   errorRespBody,
 })
 
-export type CreatePlateReqBody =
-  typeof platesModel.models.createPlateReqBody.schema.static
-export type UpdatePlateReqBody =
-  typeof platesModel.models.updatePlateReqBody.schema.static
+export type CreatePlateReqBody = typeof platesModel.models.createPlateReqBody.schema.static
+export type UpdatePlateReqBody = typeof platesModel.models.updatePlateReqBody.schema.static

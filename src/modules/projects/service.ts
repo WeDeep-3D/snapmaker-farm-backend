@@ -11,9 +11,7 @@ import type { CreateProjectReqBody, UpdateProjectReqBody } from './model'
 export abstract class Project {
   static async createProject(data: CreateProjectReqBody) {
     try {
-      const insertedProject = (
-        await db.insert(projects).values(data).returning()
-      )[0]
+      const insertedProject = (await db.insert(projects).values(data).returning())[0]
       if (!insertedProject) {
         return buildErrorResponse(500, 'Failed to create project')
       }
@@ -34,11 +32,7 @@ export abstract class Project {
   static async getProject(projectId: string) {
     try {
       const selectedProject = (
-        await db
-          .select()
-          .from(projects)
-          .where(eq(projects.id, projectId))
-          .limit(1)
+        await db.select().from(projects).where(eq(projects.id, projectId)).limit(1)
       )[0]
       if (!selectedProject) {
         return buildErrorResponse(404, 'Project not found')
@@ -52,11 +46,7 @@ export abstract class Project {
   static async updateProject(projectId: string, data: UpdateProjectReqBody) {
     try {
       const updatedProject = (
-        await db
-          .update(projects)
-          .set(data)
-          .where(eq(projects.id, projectId))
-          .returning()
+        await db.update(projects).set(data).where(eq(projects.id, projectId)).returning()
       )[0]
       if (!updatedProject) {
         return buildErrorResponse(404, 'Project not found')

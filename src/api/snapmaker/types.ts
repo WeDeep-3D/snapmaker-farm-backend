@@ -27,13 +27,7 @@ export interface GetSystemInfoResp {
   result: {
     system_info: {
       python: {
-        version: [
-          number,
-          number,
-          number,
-          'alpha' | 'beta' | 'candidate' | 'final',
-          number,
-        ]
+        version: [number, number, number, 'alpha' | 'beta' | 'candidate' | 'final', number]
         version_string: string
       }
       product_info: {

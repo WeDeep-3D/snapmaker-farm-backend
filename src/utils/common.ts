@@ -4,14 +4,9 @@ import { errorRespBody } from '@/utils/model'
 
 export function generateSequence(begin: number, end: number): Generator<number>
 export function generateSequence(begin: bigint, end: bigint): Generator<bigint>
-export function* generateSequence(
-  begin: number | bigint,
-  end: number | bigint,
-) {
+export function* generateSequence(begin: number | bigint, end: number | bigint) {
   if (typeof begin !== typeof end) {
-    throw new TypeError(
-      'buildSequence requires begin and end to be the same type',
-    )
+    throw new TypeError('buildSequence requires begin and end to be the same type')
   }
 
   if (typeof begin === 'bigint') {

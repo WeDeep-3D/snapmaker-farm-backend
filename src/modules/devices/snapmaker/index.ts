@@ -15,10 +15,7 @@ export class SnapmakerDevice {
     this._httpApi = new HttpApi(ip)
     this._ws = new WebSocket(`ws://${ip}:7125/websocket`)
     this._ws.onclose = (event) => {
-      log.warn(
-        { device, event },
-        `Ws closed on ${device.model} (${device.serialNumber})`,
-      )
+      log.warn({ device, event }, `Ws closed on ${device.model} (${device.serialNumber})`)
       this._klippyState = KlippyState.unknown
       this._printState = PrintState.unknown
     }
@@ -41,10 +38,7 @@ export class SnapmakerDevice {
           break
         }
         default:
-          log.debug(
-            { device, data },
-            `Ws message on ${device.model} (${device.serialNumber})`,
-          )
+          log.debug({ device, data }, `Ws message on ${device.model} (${device.serialNumber})`)
           return
       }
     }

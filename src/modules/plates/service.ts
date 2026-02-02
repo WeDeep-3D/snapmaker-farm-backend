@@ -11,9 +11,7 @@ import type { CreatePlateReqBody, UpdatePlateReqBody } from './model'
 export abstract class Plates {
   static async createPlate(data: CreatePlateReqBody) {
     try {
-      const insertedPlate = (
-        await db.insert(plates).values(data).returning()
-      )[0]
+      const insertedPlate = (await db.insert(plates).values(data).returning())[0]
       if (!insertedPlate) {
         return buildErrorResponse(500, 'Failed to create plate')
       }
@@ -40,11 +38,7 @@ export abstract class Plates {
   static async updatePlate(plateId: string, data: UpdatePlateReqBody) {
     try {
       const updatedPlate = (
-        await db
-          .update(plates)
-          .set(data)
-          .where(eq(plates.id, plateId))
-          .returning()
+        await db.update(plates).set(data).where(eq(plates.id, plateId)).returning()
       )[0]
       if (!updatedPlate) {
         return buildErrorResponse(404, 'Plate not found')
@@ -57,9 +51,7 @@ export abstract class Plates {
   }
   static async deletePlate(plateId: string) {
     try {
-      const deletedPlate = (
-        await db.delete(plates).where(eq(plates.id, plateId)).returning()
-      )[0]
+      const deletedPlate = (await db.delete(plates).where(eq(plates.id, plateId)).returning())[0]
       if (!deletedPlate) {
         return buildErrorResponse(404, 'Plate not found')
       }
