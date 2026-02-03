@@ -23,7 +23,7 @@ export abstract class Scans {
   }
 
   static async getAllScans() {
-    return buildSuccessResponse(scanHelper.stats)
+    return buildSuccessResponse(scanHelper.info)
   }
 
   static async getScan(scanId: string) {
@@ -31,13 +31,7 @@ export abstract class Scans {
     if (!scan) {
       return buildErrorResponse(404, 'Scan not found')
     }
-    return buildSuccessResponse({
-      queuedCount: scan.queued.length,
-      inProgressCount: scan.inProgress.size,
-      processedCount: scan.processed,
-      recognized: scan.recognized,
-      totalCount: scan.totalCount,
-    })
+    return buildSuccessResponse(scan)
   }
 
   static async updateScan(config: UpdateScanReqBody) {

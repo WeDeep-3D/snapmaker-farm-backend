@@ -4,17 +4,14 @@ import { HttpApi } from '@/api/snapmaker'
 import { generateSequence } from '@/utils/common'
 import { checkTcpPortOpen } from '@/utils/net'
 
-export const checkIsMoonrakerDevice = async (ip: string, timeout = 2000) => {
+export const getSystemInfo = async (ip: string, timeout = 2000) => {
   try {
     if (!(await checkTcpPortOpen(ip, 7125, timeout))) {
-      return false
+      return
     }
-    // noinspection HttpUrlsUsage
-    const httpApi = new HttpApi(ip)
-    const moonrakerInfo = await httpApi.getMoonrakerInfo()
-    return !!moonrakerInfo.result.moonraker_version.length
+    return (await new HttpApi(ip).getSystemInfo()).result.system_info
   } catch {
-    return false
+    return
   }
 }
 

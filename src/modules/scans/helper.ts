@@ -1,14 +1,17 @@
 import { log } from '@/log'
 import { generateSequence } from '@/utils/common'
 
-import { checkIsMoonrakerDevice } from './utils'
+import { getSystemInfo } from './utils'
+import type {
+  GetAllScansRespBody,
+  GetScanRespBody,
+  RecognizedDeviceInfo,
+  TaskBase,
+} from '@/modules/scans/model'
 
-interface Task {
+interface Task extends TaskBase {
   queued: string[]
-  inProgress: Set<string>
-  processed: number
-  recognized: string[]
-  totalCount: number
+  recognized: RecognizedDeviceInfo[]
 }
 
 const normalizeConcurrency = (value: number): number => {
@@ -31,16 +34,16 @@ export class ScansHelper {
     }
   }
 
-  create(queue: string[]) {
+  create(queue: string[]): string {
     if (!this._isRunning) {
       throw new Error('ScansHelper is not running')
     }
 
     const id = Bun.randomUUIDv7()
     this._tasks.set(id, {
+      id,
+      processingCount: 0,
       queued: queue,
-      inProgress: new Set<string>(),
-      processed: 0,
       recognized: [],
       totalCount: queue.length,
     })
@@ -48,11 +51,20 @@ export class ScansHelper {
     return id
   }
 
-  retrieve(taskId: string) {
-    return this._tasks.get(taskId)
+  retrieve(taskId: string): GetScanRespBody['data'] | undefined {
+    const task = this._tasks.get(taskId)
+    if (task) {
+      return {
+        id: task.id,
+        processingCount: task.processingCount,
+        queuedCount: task.queued.length,
+        recognized: task.recognized,
+        totalCount: task.totalCount,
+      }
+    }
   }
 
-  delete(taskId: string) {
+  delete(taskId: string): boolean {
     return this._tasks.delete(taskId)
   }
 
@@ -69,7 +81,7 @@ export class ScansHelper {
     }
   }
 
-  get stats() {
+  get info(): GetAllScansRespBody['data'] {
     return {
       concurrency: this._concurrency,
       timeout: this._timeout,
@@ -79,9 +91,8 @@ export class ScansHelper {
       },
       tasks: Array.from(this._tasks).map(([taskId, task]) => ({
         id: taskId,
+        processingCount: task.processingCount,
         queuedCount: task.queued.length,
-        inProgressCount: task.inProgress.size,
-        processedCount: task.processed,
         recognizedCount: task.recognized.length,
         totalCount: task.totalCount,
       })),
@@ -156,7 +167,7 @@ export class ScansHelper {
       const [taskId, task] = entry
       const ip = task.queued.shift()
       if (ip !== undefined) {
-        task.inProgress.add(ip)
+        task.processingCount++
         this._lastTaskId = taskId
         return { taskId, ip }
       }
@@ -177,21 +188,41 @@ export class ScansHelper {
         }
         const { taskId, ip } = next
         try {
-          const isMoonrakerDevice = await checkIsMoonrakerDevice(ip, this._timeout)
+          const systemInfo = await getSystemInfo(ip, this._timeout)
           const task = this._tasks.get(taskId)
           if (task) {
-            if (isMoonrakerDevice) {
-              task.recognized.push(ip)
+            if (systemInfo) {
+              const networkInterface = Object.entries(systemInfo.network).find(
+                ([_, interfaceInfo]) => {
+                  return interfaceInfo.ip_addresses.some((address) => address.address === ip)
+                },
+              )
+              if (networkInterface) {
+                const [interfaceName, interfaceInfo] = networkInterface
+                task.recognized.push({
+                  ip,
+                  model: systemInfo.product_info.machine_type,
+                  name: systemInfo.product_info.device_name,
+                  network: {
+                    macAddress: interfaceInfo.mac_address,
+                    type: interfaceName.includes('eth')
+                      ? 'wired'
+                      : interfaceName.includes('wlan')
+                        ? 'wireless'
+                        : 'unknown',
+                  },
+                  serialNumber: systemInfo.product_info.serial_number,
+                  version: systemInfo.product_info.software_version,
+                })
+              }
             }
-            task.processed += 1
-            task.inProgress.delete(ip)
+            task.processingCount--
           }
         } catch (error) {
           log.error(error)
           const task = this._tasks.get(taskId)
           if (task) {
-            task.processed += 1
-            task.inProgress.delete(ip)
+            task.processingCount--
           }
         }
       }

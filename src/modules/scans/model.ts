@@ -2,6 +2,28 @@ import { Elysia, t } from 'elysia'
 
 import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 
+const recognizedDeviceInfoModel = t.Object({
+  ip: t.String({ format: 'ipv4' }),
+  model: t.String(),
+  name: t.String(),
+  network: t.Optional(
+    t.Object({
+      macAddress: t.String(),
+      type: t.Union([t.Literal('wired'), t.Literal('wireless'), t.Literal('unknown')]),
+    }),
+  ),
+  serialNumber: t.String(),
+  version: t.String(),
+})
+export type RecognizedDeviceInfo = typeof recognizedDeviceInfoModel.static
+
+const taskBaseModel = t.Object({
+  id: t.String({ format: 'uuid' }),
+  processingCount: t.Number(),
+  totalCount: t.Number(),
+})
+export type TaskBase = typeof taskBaseModel.static
+
 export const scansModel = new Elysia({ name: 'scans.model' }).model({
   createScanReqBody: t.Array(
     t.Union([
@@ -27,25 +49,24 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
         running: t.Number(),
       }),
       tasks: t.Array(
-        t.Object({
-          id: t.String({ format: 'uuid' }),
-          queuedCount: t.Number(),
-          inProgressCount: t.Number(),
-          processedCount: t.Number(),
-          recognizedCount: t.Number(),
-          totalCount: t.Number(),
-        }),
+        t.Intersect([
+          taskBaseModel,
+          t.Object({
+            queuedCount: t.Number(),
+            recognizedCount: t.Number(),
+          }),
+        ]),
       ),
     }),
   ),
   getScanRespBody: buildSuccessRespBody(
-    t.Object({
-      queuedCount: t.Number(),
-      inProgressCount: t.Number(),
-      processedCount: t.Number(),
-      recognized: t.Array(t.String({ format: 'ipv4' })),
-      totalCount: t.Number(),
-    }),
+    t.Intersect([
+      taskBaseModel,
+      t.Object({
+        queuedCount: t.Number(),
+        recognized: t.Array(recognizedDeviceInfoModel),
+      }),
+    ]),
   ),
   updateScanReqBody: t.Object({
     concurrency: t.Optional(t.Number({ minimum: 1, maximum: 1000 })),
@@ -63,4 +84,6 @@ export const scansModel = new Elysia({ name: 'scans.model' }).model({
 })
 
 export type CreateScanReqBody = typeof scansModel.models.createScanReqBody.schema.static
+export type GetAllScansRespBody = typeof scansModel.models.getAllScansRespBody.schema.static
+export type GetScanRespBody = typeof scansModel.models.getScanRespBody.schema.static
 export type UpdateScanReqBody = typeof scansModel.models.updateScanReqBody.schema.static

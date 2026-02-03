@@ -1,6 +1,5 @@
 import { ScansHelper } from '@/modules/scans/helper'
 import { ipRangesToNumberSet } from '@/modules/scans/utils'
-import { HttpApi } from '@/api/snapmaker'
 import { filterSpecialIps } from '@/utils/net'
 
 const bgColorYellow = '\x1b[43m'
@@ -38,7 +37,7 @@ const main = async () => {
         throw new Error('Task disappeared while waiting for completion')
       }
       console.log(task)
-      if (task.queued.length === 0 && task.inProgress.size === 0) {
+      if (task.queuedCount === 0 && task.processingCount === 0) {
         return task
       }
       await new Promise((resolve) => setTimeout(resolve, 250))
@@ -48,39 +47,15 @@ const main = async () => {
   try {
     const task = await waitForQueueDrain()
     const printResults = await Promise.all(
-      task.recognized.map(async (ip) => {
-        const httpApi = new HttpApi(ip)
-        const {
-          result: { system_info },
-        } = await httpApi.getSystemInfo()
-        const networkInterface = Object.entries(system_info.network).find(([_, interfaceInfo]) => {
-          return interfaceInfo.ip_addresses.some((address) => address.address === ip)
-        })
-        if (networkInterface) {
-          const [interfaceName, interfaceInfo] = networkInterface
-          return {
-            bgColor: interfaceName.includes('eth') ? bgColorYellow : '',
-            name: system_info.product_info.device_name,
-            interface: interfaceName.includes('eth')
-              ? '有线'
-              : interfaceName.includes('wlan')
-                ? '[无线]'
-                : interfaceName,
-            ip,
-            mac: interfaceInfo.mac_address,
-            version: system_info.product_info.firmware_version,
-            serial: system_info.product_info.serial_number,
-          }
-        } else {
-          return {
-            bgColor: bgColorYellow,
-            name: system_info.product_info.device_name,
-            interface: '未知',
-            ip,
-            mac: '未知',
-            version: system_info.product_info.firmware_version,
-            serial: system_info.product_info.serial_number,
-          }
+      task.recognized.map(async (deviceInfo) => {
+        return {
+          bgColor: deviceInfo.network?.type === 'wired' ? bgColorYellow : '',
+          name: deviceInfo.productInfo.device_name,
+          interface: deviceInfo.network?.type ?? 'unknown',
+          ip: deviceInfo.ip,
+          mac: deviceInfo.network?.macAddress ?? 'unknown',
+          version: deviceInfo.productInfo.firmware_version,
+          serial: deviceInfo.productInfo.serial_number,
         }
       }),
     )
