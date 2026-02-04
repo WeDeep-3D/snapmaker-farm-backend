@@ -199,18 +199,36 @@ export class ScansHelper {
               )
               if (networkInterface) {
                 const [interfaceName, interfaceInfo] = networkInterface
+                const networkType = interfaceName.includes('eth')
+                  ? 'wired'
+                  : interfaceName.includes('wlan')
+                    ? 'wireless'
+                    : 'unknown'
+                const recognizedDeviceInfo = task.recognized.find(
+                  (device) =>
+                    device.model === systemInfo.product_info.machine_type &&
+                    device.name === systemInfo.product_info.device_name &&
+                    device.serialNumber === systemInfo.product_info.serial_number &&
+                    device.version === systemInfo.product_info.software_version,
+                )
+                if (recognizedDeviceInfo) {
+                  recognizedDeviceInfo.network.push({
+                    ip,
+                    mac: interfaceInfo.mac_address,
+                    type: networkType,
+                  })
+                } else {
+                }
                 task.recognized.push({
-                  ip,
                   model: systemInfo.product_info.machine_type,
                   name: systemInfo.product_info.device_name,
-                  network: {
-                    macAddress: interfaceInfo.mac_address,
-                    type: interfaceName.includes('eth')
-                      ? 'wired'
-                      : interfaceName.includes('wlan')
-                        ? 'wireless'
-                        : 'unknown',
-                  },
+                  network: [
+                    {
+                      ip,
+                      mac: interfaceInfo.mac_address,
+                      type: networkType,
+                    },
+                  ],
                   serialNumber: systemInfo.product_info.serial_number,
                   version: systemInfo.product_info.software_version,
                 })

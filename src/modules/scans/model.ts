@@ -3,12 +3,12 @@ import { Elysia, t } from 'elysia'
 import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
 
 const recognizedDeviceInfoModel = t.Object({
-  ip: t.String({ format: 'ipv4' }),
   model: t.String(),
   name: t.String(),
-  network: t.Optional(
+  network: t.Array(
     t.Object({
-      macAddress: t.String(),
+      ip: t.String({ format: 'ipv4' }),
+      mac: t.String(),
       type: t.Union([t.Literal('wired'), t.Literal('wireless'), t.Literal('unknown')]),
     }),
   ),
