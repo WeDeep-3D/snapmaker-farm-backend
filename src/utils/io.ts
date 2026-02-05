@@ -1,5 +1,10 @@
-import { downloadZip } from 'client-zip';
+import { downloadZip, makeZip } from 'client-zip'
 
-export async function packToZip(files: File[]) {
-  return downloadZip(files, { buffersAreUTF8: true }).blob();
+export function packToZip(files: File[]) {
+  return downloadZip(files, { buffersAreUTF8: true }).blob()
+}
+
+export function packToZipStream(files: Parameters<typeof downloadZip>[0]) {
+  // Stream the zip so the client can start downloading immediately.
+  return makeZip(files, { buffersAreUTF8: true })
 }

@@ -3,7 +3,7 @@ import { Elysia } from 'elysia'
 
 import { devicesModel } from './model'
 import { devicesService } from './service'
-import { packToZip } from '@/utils/io'
+import { packToZipStream } from '@/utils/io'
 import { buildErrorResponse } from '@/utils/common'
 
 export const devices = new Elysia({
@@ -21,43 +21,40 @@ export const devices = new Elysia({
   }))
   .get('/:ip/logs', async ({ params }) => {
     // noinspection HttpUrlsUsage
+    const baseURL = `http://${params.ip}:7125/server/files`
     const filesApi = axios.create({
-      baseURL: `http://${params.ip}:7125/server/files`,
+      baseURL,
     })
     try {
-      const fileList = await Promise.all(
-        (
-          await filesApi.get<{
-            result: { path: string; modified: number; size: number; permissions: string }[]
-          }>(`/list?root=logs`)
-        ).data.result.map(async (fileData) => {
-          try {
-            return new File(
-              [
-                new Blob([(await filesApi.get<ArrayBuffer>(`/logs/${fileData.path}`)).data], {
-                  type: 'application/octet-stream',
-                }),
-              ],
-              fileData.path,
-              {
-                lastModified: fileData.modified,
-                type: 'application/octet-stream',
-              },
-            )
-          } catch (error) {
-            return new File(
-              [new Blob([(error as Error).message], { type: 'text/plain' })],
-              fileData.path,
-              {
-                lastModified: fileData.modified,
-                type: 'application/octet-stream',
-              },
-            )
+      const { data } = await filesApi.get<{
+        result: { path: string; modified: number; size: number; permissions: string }[]
+      }>(`/list?root=logs`)
+
+      const files = await Promise.all(
+        data.result.map(async (fileData) => {
+          const fileUrl = `${baseURL}/logs/${fileData.path}`
+          const response = await fetch(fileUrl)
+          if (!response.ok || !response.body) {
+            throw new Error(`Failed to fetch log file ${fileData.path}: ${response.status}`)
+          }
+
+          return {
+            name: fileData.path,
+            lastModified: fileData.modified,
+            type: response.headers.get('content-type') ?? 'application/octet-stream',
+            input: response.body,
           }
         }),
       )
-      const blob = await packToZip(fileList)
-      return new File([blob], `${params.ip}_logs.zip`, { type: 'application/zip' })
+
+      const zipStream = packToZipStream(files)
+      return new Response(zipStream, {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': `attachment; filename="${params.ip}_logs.zip"`,
+          'Cache-Control': 'no-cache',
+        },
+      })
     } catch (error) {
       return buildErrorResponse(500, (error as Error).message)
     }
