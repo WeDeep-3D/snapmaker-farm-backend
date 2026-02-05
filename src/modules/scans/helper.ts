@@ -218,20 +218,20 @@ export class ScansHelper {
                     type: networkType,
                   })
                 } else {
+                  task.recognized.push({
+                    model: systemInfo.product_info.machine_type,
+                    name: systemInfo.product_info.device_name,
+                    network: [
+                      {
+                        ip,
+                        mac: interfaceInfo.mac_address,
+                        type: networkType,
+                      },
+                    ],
+                    serialNumber: systemInfo.product_info.serial_number,
+                    version: systemInfo.product_info.software_version,
+                  })
                 }
-                task.recognized.push({
-                  model: systemInfo.product_info.machine_type,
-                  name: systemInfo.product_info.device_name,
-                  network: [
-                    {
-                      ip,
-                      mac: interfaceInfo.mac_address,
-                      type: networkType,
-                    },
-                  ],
-                  serialNumber: systemInfo.product_info.serial_number,
-                  version: systemInfo.product_info.software_version,
-                })
               }
             }
             task.processingCount--
