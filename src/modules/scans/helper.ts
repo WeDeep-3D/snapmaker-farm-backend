@@ -1,13 +1,15 @@
 import { log } from '@/log'
 import { generateSequence } from '@/utils/common'
 
-import { getSystemInfo } from './utils'
+import type { GetSystemInfoResp } from '@/api/snapmaker/types'
 import type {
   GetAllScansRespBody,
   GetScanRespBody,
   RecognizedDeviceInfo,
   TaskBase,
 } from '@/modules/scans/model'
+
+import { getSystemInfo } from './utils'
 
 interface Task extends TaskBase {
   queued: string[]
@@ -197,41 +199,49 @@ export class ScansHelper {
                   return interfaceInfo.ip_addresses.some((address) => address.address === ip)
                 },
               )
+              // TODO: Replace the default value after manufacturers fix the issue of missing network info in system info
+              let interfaceName: string = 'eth0'
+              let interfaceInfo:
+                | GetSystemInfoResp['result']['system_info']['network'][string]
+                | undefined
+              let networkType: 'wired' | 'wireless' | 'unknown' = 'wired'
+
               if (networkInterface) {
-                const [interfaceName, interfaceInfo] = networkInterface
-                const networkType = interfaceName.includes('eth')
+                ;[interfaceName, interfaceInfo] = networkInterface
+                networkType = interfaceName.includes('eth')
                   ? 'wired'
                   : interfaceName.includes('wlan')
                     ? 'wireless'
                     : 'unknown'
-                const recognizedDeviceInfo = task.recognized.find(
-                  (device) =>
-                    device.model === systemInfo.product_info.machine_type &&
-                    device.name === systemInfo.product_info.device_name &&
-                    device.serialNumber === systemInfo.product_info.serial_number &&
-                    device.version === systemInfo.product_info.software_version,
-                )
-                if (recognizedDeviceInfo) {
-                  recognizedDeviceInfo.network.push({
-                    ip,
-                    mac: interfaceInfo.mac_address,
-                    type: networkType,
-                  })
-                } else {
-                  task.recognized.push({
-                    model: systemInfo.product_info.machine_type,
-                    name: systemInfo.product_info.device_name,
-                    network: [
-                      {
-                        ip,
-                        mac: interfaceInfo.mac_address,
-                        type: networkType,
-                      },
-                    ],
-                    serialNumber: systemInfo.product_info.serial_number,
-                    version: systemInfo.product_info.software_version,
-                  })
-                }
+              }
+
+              const recognizedDeviceInfo = task.recognized.find(
+                (device) =>
+                  device.model === systemInfo.product_info.machine_type &&
+                  device.name === systemInfo.product_info.device_name &&
+                  device.serialNumber === systemInfo.product_info.serial_number &&
+                  device.version === systemInfo.product_info.software_version,
+              )
+              if (recognizedDeviceInfo) {
+                recognizedDeviceInfo.network.push({
+                  ip,
+                  mac: interfaceInfo?.mac_address ?? '',
+                  type: networkType,
+                })
+              } else {
+                task.recognized.push({
+                  model: systemInfo.product_info.machine_type,
+                  name: systemInfo.product_info.device_name,
+                  network: [
+                    {
+                      ip,
+                      mac: interfaceInfo?.mac_address ?? '',
+                      type: networkType,
+                    },
+                  ],
+                  serialNumber: systemInfo.product_info.serial_number,
+                  version: systemInfo.product_info.software_version,
+                })
               }
             }
             task.processingCount--
