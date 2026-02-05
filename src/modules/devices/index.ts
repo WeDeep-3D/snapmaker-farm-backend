@@ -4,7 +4,7 @@ import { Elysia } from 'elysia'
 import { devicesModel } from './model'
 import { devicesService } from './service'
 import { packToZip } from '@/utils/io'
-import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
+import { buildErrorResponse } from '@/utils/common'
 
 export const devices = new Elysia({
   prefix: '/api/v1/devices',
@@ -57,9 +57,7 @@ export const devices = new Elysia({
         }),
       )
       const blob = await packToZip(fileList)
-      return buildSuccessResponse(
-        new File([blob], `logs_${params.ip}.zip`, { type: 'application/zip' }),
-      )
+      return new File([blob], `logs_${params.ip}.zip`, { type: 'application/zip' })
     } catch (error) {
       return buildErrorResponse(500, (error as Error).message)
     }
