@@ -34,7 +34,7 @@ export const devices = new Elysia({
           try {
             return new File(
               [
-                new Blob([(await axios.get<ArrayBuffer>(`/logs/${fileData.path}`)).data], {
+                new Blob([(await filesApi.get<ArrayBuffer>(`/logs/${fileData.path}`)).data], {
                   type: 'application/octet-stream',
                 }),
               ],
