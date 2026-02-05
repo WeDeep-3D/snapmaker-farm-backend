@@ -57,7 +57,7 @@ export const devices = new Elysia({
         }),
       )
       const blob = await packToZip(fileList)
-      return new File([blob], `logs_${params.ip}.zip`, { type: 'application/zip' })
+      return new File([blob], `${params.ip}_logs.zip`, { type: 'application/zip' })
     } catch (error) {
       return buildErrorResponse(500, (error as Error).message)
     }
