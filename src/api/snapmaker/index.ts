@@ -1,6 +1,11 @@
 import axios, { type AxiosInstance } from 'axios'
 
-import type { GetMoonrakerInfoResp, GetSystemInfoResp, ListRegisteredRootsResp } from './types'
+import type {
+  GetMoonrakerInfoResp,
+  GetSystemInfoResp,
+  ListAvailableFilesResp,
+  ListRegisteredRootsResp,
+} from './types'
 
 export class HttpApi {
   private readonly _api: AxiosInstance
@@ -20,7 +25,7 @@ export class HttpApi {
 
   async listAvailableFiles(root: string) {
     return (
-      await this._api.get<ListRegisteredRootsResp>('/server/files/list', {
+      await this._api.get<ListAvailableFilesResp>('/server/files/list', {
         params: { root },
       })
     ).data

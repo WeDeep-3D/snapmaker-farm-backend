@@ -114,6 +114,15 @@ export interface GetSystemInfoResp {
   }
 }
 
+export interface ListAvailableFilesResp {
+  result: {
+    path: string
+    modified: number
+    size: number
+    permissions: string
+  }[]
+}
+
 export interface ListRegisteredRootsResp {
   result: {
     name: string

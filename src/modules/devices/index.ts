@@ -1,6 +1,6 @@
-import axios from 'axios'
 import { Elysia } from 'elysia'
 
+import { HttpApi } from '@/api/snapmaker'
 import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 import { packToZipStream } from '@/utils/io'
 
@@ -51,35 +51,19 @@ export const devices = new Elysia({
     },
   )
   .get('/:ip/logs', async ({ params }) => {
-    // noinspection HttpUrlsUsage
-    const baseURL = `http://${params.ip}:7125/server/files`
-    const filesApi = axios.create({
-      baseURL,
-    })
+    const api = new HttpApi(params.ip)
     try {
-      const { data } = await filesApi.get<{
-        result: { path: string; modified: number; size: number; permissions: string }[]
-      }>(`/list?root=logs`)
+      const { result: fileList } = await api.listAvailableFiles('logs')
 
       const files = await Promise.all(
-        data.result.map(async (fileData) => {
-          const fileUrl = `${baseURL}/logs/${fileData.path}`
-          const response = await fetch(fileUrl)
-          if (!response.ok || !response.body) {
-            throw new Error(`Failed to fetch log file ${fileData.path}: ${response.status}`)
-          }
-
-          return {
-            name: fileData.path,
-            lastModified: fileData.modified,
-            type: response.headers.get('content-type') ?? 'application/octet-stream',
-            input: response.body,
-          }
-        }),
+        fileList.map(async (fileData) => ({
+          name: fileData.path,
+          lastModified: fileData.modified,
+          input: await api.downloadFile('logs', fileData.path),
+        })),
       )
 
-      const zipStream = packToZipStream(files)
-      return new Response(zipStream, {
+      return new Response(packToZipStream(files), {
         headers: {
           'Content-Type': 'application/zip',
           'Content-Disposition': `attachment; filename="${params.ip}_logs.zip"`,
