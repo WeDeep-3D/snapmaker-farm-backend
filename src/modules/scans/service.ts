@@ -1,11 +1,10 @@
 import { Elysia } from 'elysia'
 
 import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
-import { filterSpecialIps } from '@/utils/net'
 
 import { ScansHelper } from './helper'
 import type { CreateScanReqBody, UpdateScanReqBody } from './model'
-import { ipRangesToNumberSet } from './utils'
+import { resolveIpRanges } from './utils'
 
 const scanHelper = new ScansHelper()
 
@@ -15,7 +14,7 @@ export abstract class Scans {
   static async createScan(ranges: CreateScanReqBody) {
     let ipsToCheck: string[]
     try {
-      ipsToCheck = filterSpecialIps(ipRangesToNumberSet(ranges, Scans._maxCount))
+      ipsToCheck = resolveIpRanges(ranges, Scans._maxCount)
     } catch (error) {
       return buildErrorResponse(422, (error as Error).message)
     }

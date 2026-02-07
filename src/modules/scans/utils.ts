@@ -2,7 +2,7 @@ import { IPv4, IPv4CidrRange } from 'ip-num'
 
 import { HttpApi } from '@/api/snapmaker'
 import { generateSequence } from '@/utils/common'
-import { checkTcpPortOpen } from '@/utils/net'
+import { checkTcpPortOpen, filterSpecialIps } from '@/utils/net'
 
 export const getSystemInfo = async (ip: string, timeout = 2000) => {
   try {
@@ -41,4 +41,15 @@ export const ipRangesToNumberSet = (
     }
   }
   return result
+}
+
+/**
+ * Converts IP ranges to a validated list of scannable IP strings,
+ * enforcing max count and filtering out special/reserved IPs.
+ */
+export const resolveIpRanges = (
+  ranges: ({ cidr: string } | { begin: string; end: string })[],
+  maxCount: bigint,
+): string[] => {
+  return filterSpecialIps(ipRangesToNumberSet(ranges, maxCount))
 }

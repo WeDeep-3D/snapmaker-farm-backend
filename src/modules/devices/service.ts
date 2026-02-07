@@ -3,66 +3,63 @@ import { sql } from 'drizzle-orm'
 import { Elysia } from 'elysia'
 import { isIP } from 'node:net'
 
-import packageJson from 'package.json'
 import { HttpApi } from '@/api/snapmaker'
 import type { GetSystemInfoResp } from '@/api/snapmaker/types'
 import { db } from '@/database'
-import { devices, farmMetadata } from '@/database/schema'
+import { devices } from '@/database/schema'
 import { log } from '@/log'
+import { buildSuccessResponse } from '@/utils/common'
+import { packToZipStream } from '@/utils/io'
 import { checkTcpPortOpen } from '@/utils/net'
 
-import { SnapmakerDevice } from './snapmaker'
 import type { BindDeviceItem, BindDeviceResult } from './model'
+import { SnapmakerDevice } from './snapmaker'
+import { BINDING_FILENAME, extractNetworkInfo, getDbFingerprint } from './utils'
 
-const BINDING_FILENAME = `.${packageJson.name}_binding`
-
-let cachedFarmId: string
-
-export async function getDbFingerprint(): Promise<string> {
-  if (cachedFarmId) {
-    return cachedFarmId
-  }
-
-  const existing = await db.select().from(farmMetadata).limit(1)
-  if (existing[0]) {
-    cachedFarmId = existing[0].id
-    return cachedFarmId
-  }
-
-  const inserted = (await db.insert(farmMetadata).values({}).returning())[0]
-  if (!inserted) {
-    throw new Error('Failed to initialize farm metadata')
-  }
-  cachedFarmId = inserted.id
-  return cachedFarmId
-}
-
-function extractNetworkInfo(network: GetSystemInfoResp['result']['system_info']['network']) {
-  let ethIp: string | undefined = undefined
-  let ethMac: string | undefined = undefined
-  let wlanIp: string | undefined = undefined
-  let wlanMac: string | undefined = undefined
-
-  for (const [name, info] of Object.entries(network)) {
-    const ipAddress = info.ip_addresses.find((a) => a.family === 'ipv4' && !a.is_link_local)
-
-    if (!ethMac && /^(eth|en)/.test(name)) {
-      ethMac = info.mac_address
-      if (ipAddress) {
-        ethIp = ipAddress.address
-      }
-    } else if (!wlanMac && /^(wlan|wl)/.test(name)) {
-      wlanMac = info.mac_address
-      if (ipAddress) {
-        wlanIp = ipAddress.address
-      }
-    }
-  }
-
-  return { ethIp, ethMac, wlanIp, wlanMac }
+type DevicesStore = {
+  connectedDevices: Map<string, SnapmakerDevice>
+  disconnectedDevices: Map<string, typeof devices.$inferSelect>
+  unknownDevices: Map<string, SnapmakerDevice>
 }
 
 export abstract class Devices {
+  static async downloadLogs(ip: string) {
+    const api = new HttpApi(ip)
+    const { result: fileList } = await api.listAvailableFiles('logs')
+
+    const files = await Promise.all(
+      fileList.map(async (fileData) => ({
+        name: fileData.path,
+        lastModified: fileData.modified,
+        input: await api.downloadFile('logs', fileData.path),
+      })),
+    )
+
+    return new Response(packToZipStream(files), {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${ip}_logs.zip"`,
+        'Cache-Control': 'no-cache',
+      },
+    })
+  }
+
+  static async bindDevices(body: BindDeviceItem[], store: DevicesStore) {
+    const results = await Promise.all(body.map((item) => Devices.bindDevice(item)))
+
+    // Update in-memory store for successfully bound devices
+    for (const result of results) {
+      if (result.status === 'bound' && result.device) {
+        const device = result.device
+        store.disconnectedDevices.delete(device.id)
+        store.unknownDevices.delete(device.id)
+        store.connectedDevices.set(device.id, new SnapmakerDevice(result.ip, device))
+      }
+    }
+
+    return buildSuccessResponse(results)
+  }
+
   static async bindDevice(bindDeviceItem: BindDeviceItem): Promise<BindDeviceResult> {
     const api = new HttpApi(bindDeviceItem.ip)
     const fingerprint = await getDbFingerprint()
