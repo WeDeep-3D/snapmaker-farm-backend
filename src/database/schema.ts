@@ -17,6 +17,13 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+export const farmMetadata = pgTable('farm_metadata', {
+  id: uuid()
+    .default(sql`uuidv7()`)
+    .primaryKey()
+    .notNull(),
+})
+
 export const deviceModel = pgEnum('device_model', ['Snapmaker:U1'])
 export const filamentSubtype = pgEnum('filament_subtype', [
   'SnapSpeed',

@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { Elysia } from 'elysia'
 
-import { devicesModel } from './model'
-import { devicesService } from './service'
+import { buildErrorResponse, buildSuccessResponse } from '@/utils/common'
 import { packToZipStream } from '@/utils/io'
-import { buildErrorResponse } from '@/utils/common'
+
+import { devicesModel } from './model'
+import { Devices, devicesService } from './service'
+import { SnapmakerDevice } from './snapmaker'
 
 export const devices = new Elysia({
   prefix: '/api/v1/devices',
@@ -19,6 +21,35 @@ export const devices = new Elysia({
       unknown: store.unknownDevices,
     },
   }))
+  .post(
+    '/',
+    async ({ body, store }) => {
+      try {
+        const results = await Promise.all(body.map((item) => Devices.bindDevice(item)))
+
+        // Update in-memory store for successfully bound devices
+        for (const result of results) {
+          if (result.status === 'bound' && result.device) {
+            const device = result.device
+            store.disconnectedDevices.delete(device.id)
+            store.unknownDevices.delete(device.id)
+            store.connectedDevices.set(device.id, new SnapmakerDevice(result.ip, device))
+          }
+        }
+
+        return buildSuccessResponse(results)
+      } catch (error) {
+        return buildErrorResponse(500, (error as Error).message)
+      }
+    },
+    {
+      body: 'bindDevicesReqBody',
+      response: {
+        200: 'bindDevicesRespBody',
+        500: 'errorRespBody',
+      },
+    },
+  )
   .get('/:ip/logs', async ({ params }) => {
     // noinspection HttpUrlsUsage
     const baseURL = `http://${params.ip}:7125/server/files`

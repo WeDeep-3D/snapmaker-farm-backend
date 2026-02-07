@@ -1,6 +1,24 @@
+import { createSelectSchema } from 'drizzle-typebox'
 import { Elysia, t } from 'elysia'
 
-import { buildSuccessRespBody } from '@/utils/model'
+import { devices } from '@/database/schema'
+import { buildSuccessRespBody, errorRespBody } from '@/utils/model'
+
+const deviceSelectSchema = createSelectSchema(devices)
+
+const bindDeviceItem = t.Object({
+  ip: t.String({ format: 'ipv4' }),
+  force: t.Optional(t.Boolean({ default: false })),
+})
+export type BindDeviceItem = typeof bindDeviceItem.static
+
+const bindDeviceResult = t.Object({
+  ip: t.String({ format: 'ipv4' }),
+  status: t.Union([t.Literal('bound'), t.Literal('already_bound'), t.Literal('error')]),
+  device: t.Optional(deviceSelectSchema),
+  message: t.Optional(t.String()),
+})
+export type BindDeviceResult = typeof bindDeviceResult.static
 
 export const devicesModel = new Elysia({ name: 'devices.model' }).model({
   getAllDevicesRespBody: buildSuccessRespBody(
@@ -14,4 +32,7 @@ export const devicesModel = new Elysia({ name: 'devices.model' }).model({
       }),
     ),
   ),
+  bindDevicesReqBody: t.Array(bindDeviceItem),
+  bindDevicesRespBody: buildSuccessRespBody(t.Array(bindDeviceResult)),
+  errorRespBody,
 })

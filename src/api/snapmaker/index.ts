@@ -29,4 +29,19 @@ export class HttpApi {
   async listRegisteredRoots() {
     return (await this._api.get<ListRegisteredRootsResp>('/server/files/roots')).data
   }
+
+  async downloadFile(root: string, filename: string): Promise<string> {
+    const response = await this._api.get<string>(`/server/files/${root}/${filename}`, {
+      responseType: 'text',
+    })
+    return response.data
+  }
+
+  async uploadFile(root: string, filename: string, content: string): Promise<void> {
+    const formData = new FormData()
+    const blob = new Blob([content], { type: 'text/plain' })
+    formData.append('file', blob, filename)
+    formData.append('root', root)
+    await this._api.post('/server/files/upload', formData)
+  }
 }

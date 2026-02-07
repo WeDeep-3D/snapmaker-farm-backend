@@ -23,6 +23,7 @@
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "strictNullChecks": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,

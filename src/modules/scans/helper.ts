@@ -25,7 +25,7 @@ export class ScansHelper {
   private readonly _runningWorker = new Set<string>()
 
   private _concurrency = 200
-  private _lastTaskId: string | null = null
+  private _lastTaskId: string | undefined = undefined
   private _isRunning = true
   private _timeout = 2000
   private _waitingPromises: Array<() => void> = []
@@ -140,7 +140,7 @@ export class ScansHelper {
     this._notifyWorkers()
     this._tasks.clear()
     this._waitingPromises = []
-    this._lastTaskId = null
+    this._lastTaskId = undefined
   }
 
   private _notifyWorkers(): void {
@@ -149,11 +149,11 @@ export class ScansHelper {
     }
   }
 
-  private _dequeueNext(): { taskId: string; ip: string } | null {
+  private _dequeueNext(): { taskId: string; ip: string } | undefined {
     const entries = Array.from(this._tasks.entries()).filter(([_, task]) => task.queued.length > 0)
     if (entries.length === 0) {
-      this._lastTaskId = null
-      return null
+      this._lastTaskId = undefined
+      return
     }
 
     const lastIndex = this._lastTaskId
@@ -175,8 +175,7 @@ export class ScansHelper {
       }
     }
 
-    this._lastTaskId = null
-    return null
+    this._lastTaskId = undefined
   }
 
   private async _startWorker(workerId: string): Promise<void> {
