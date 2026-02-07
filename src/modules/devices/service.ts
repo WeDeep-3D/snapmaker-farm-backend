@@ -22,6 +22,119 @@ type DevicesStore = {
   unknownDevices: Map<string, SnapmakerDevice>
 }
 
+async function bindDevice(bindDeviceItem: BindDeviceItem): Promise<BindDeviceResult> {
+  const api = new HttpApi(bindDeviceItem.ip)
+  const fingerprint = await getDbFingerprint()
+
+  // Step 1: Check binding file on device's config root
+  let needsUpload = true
+  try {
+    const existingBinding = await api.downloadFile('config', BINDING_FILENAME)
+    const existingFingerprint = existingBinding.trim()
+
+    if (existingFingerprint === fingerprint) {
+      // Already bound by us, skip upload but still ensure device is in DB
+      needsUpload = false
+    } else if (!bindDeviceItem.force) {
+      return {
+        ip: bindDeviceItem.ip,
+        status: 'already_bound',
+        message: `Device is already bound to another backend (fingerprint: ${existingFingerprint})`,
+      }
+    }
+    // force=true with different fingerprint → will overwrite below
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      // File doesn't exist, will create it below
+    } else {
+      return {
+        ip: bindDeviceItem.ip,
+        status: 'error',
+        message: `Failed to check binding file: ${(error as Error).message}`,
+      }
+    }
+  }
+
+  // Step 2: Upload/overwrite binding file if needed
+  if (needsUpload) {
+    try {
+      await api.uploadFile('config', BINDING_FILENAME, fingerprint)
+    } catch (error) {
+      return {
+        ip: bindDeviceItem.ip,
+        status: 'error',
+        message: `Failed to upload binding file: ${(error as Error).message}`,
+      }
+    }
+  }
+
+  // Step 3: Get system info
+  let systemInfo: GetSystemInfoResp
+  try {
+    systemInfo = await api.getSystemInfo()
+  } catch (error) {
+    return {
+      ip: bindDeviceItem.ip,
+      status: 'error',
+      message: `Failed to get system info: ${(error as Error).message}`,
+    }
+  }
+
+  // Step 4: Extract device info and upsert into DB
+  const { product_info, network } = systemInfo.result.system_info
+  const networkInfo = extractNetworkInfo(network)
+  const model = 'Snapmaker:U1' as const
+
+  try {
+    const upsertedDevice = (
+      await db
+        .insert(devices)
+        .values({
+          model,
+          serialNumber: product_info.serial_number,
+          description: `${product_info.device_name} (FW: ${product_info.firmware_version})`,
+          ethIp: networkInfo.ethIp,
+          ethMac: networkInfo.ethMac,
+          wlanIp: networkInfo.wlanIp,
+          wlanMac: networkInfo.wlanMac,
+        })
+        .onConflictDoUpdate({
+          target: [devices.model, devices.serialNumber],
+          set: {
+            description: `${product_info.device_name} (FW: ${product_info.firmware_version})`,
+            ethIp: networkInfo.ethIp,
+            ethMac: networkInfo.ethMac,
+            wlanIp: networkInfo.wlanIp,
+            wlanMac: networkInfo.wlanMac,
+            updatedAt: sql`now()`,
+          },
+        })
+        .returning()
+    )[0]
+
+    if (!upsertedDevice) {
+      return {
+        ip: bindDeviceItem.ip,
+        status: 'error',
+        message: 'Failed to upsert device in database',
+      }
+    }
+
+    return {
+      ip: bindDeviceItem.ip,
+      status: 'bound',
+      device: upsertedDevice,
+    }
+  } catch (error) {
+    log.error(error, 'Database error while binding device')
+    return {
+      ip: bindDeviceItem.ip,
+      status: 'error',
+      message: `Database error: ${(error as Error).message}`,
+    }
+  }
+}
+
 export abstract class Devices {
   static async downloadLogs(ip: string) {
     const api = new HttpApi(ip)
@@ -45,7 +158,7 @@ export abstract class Devices {
   }
 
   static async bindDevices(body: BindDeviceItem[], store: DevicesStore) {
-    const results = await Promise.all(body.map((item) => Devices.bindDevice(item)))
+    const results = await Promise.all(body.map((item) => bindDevice(item)))
 
     // Update in-memory store for successfully bound devices
     for (const result of results) {
@@ -58,119 +171,6 @@ export abstract class Devices {
     }
 
     return buildSuccessResponse(results)
-  }
-
-  static async bindDevice(bindDeviceItem: BindDeviceItem): Promise<BindDeviceResult> {
-    const api = new HttpApi(bindDeviceItem.ip)
-    const fingerprint = await getDbFingerprint()
-
-    // Step 1: Check binding file on device's config root
-    let needsUpload = true
-    try {
-      const existingBinding = await api.downloadFile('config', BINDING_FILENAME)
-      const existingFingerprint = existingBinding.trim()
-
-      if (existingFingerprint === fingerprint) {
-        // Already bound by us, skip upload but still ensure device is in DB
-        needsUpload = false
-      } else if (!bindDeviceItem.force) {
-        return {
-          ip: bindDeviceItem.ip,
-          status: 'already_bound',
-          message: `Device is already bound to another backend (fingerprint: ${existingFingerprint})`,
-        }
-      }
-      // force=true with different fingerprint → will overwrite below
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 404) {
-        // File doesn't exist, will create it below
-      } else {
-        return {
-          ip: bindDeviceItem.ip,
-          status: 'error',
-          message: `Failed to check binding file: ${(error as Error).message}`,
-        }
-      }
-    }
-
-    // Step 2: Upload/overwrite binding file if needed
-    if (needsUpload) {
-      try {
-        await api.uploadFile('config', BINDING_FILENAME, fingerprint)
-      } catch (error) {
-        return {
-          ip: bindDeviceItem.ip,
-          status: 'error',
-          message: `Failed to upload binding file: ${(error as Error).message}`,
-        }
-      }
-    }
-
-    // Step 3: Get system info
-    let systemInfo: GetSystemInfoResp
-    try {
-      systemInfo = await api.getSystemInfo()
-    } catch (error) {
-      return {
-        ip: bindDeviceItem.ip,
-        status: 'error',
-        message: `Failed to get system info: ${(error as Error).message}`,
-      }
-    }
-
-    // Step 4: Extract device info and upsert into DB
-    const { product_info, network } = systemInfo.result.system_info
-    const networkInfo = extractNetworkInfo(network)
-    const model = 'Snapmaker:U1' as const
-
-    try {
-      const upsertedDevice = (
-        await db
-          .insert(devices)
-          .values({
-            model,
-            serialNumber: product_info.serial_number,
-            description: `${product_info.device_name} (FW: ${product_info.firmware_version})`,
-            ethIp: networkInfo.ethIp,
-            ethMac: networkInfo.ethMac,
-            wlanIp: networkInfo.wlanIp,
-            wlanMac: networkInfo.wlanMac,
-          })
-          .onConflictDoUpdate({
-            target: [devices.model, devices.serialNumber],
-            set: {
-              description: `${product_info.device_name} (FW: ${product_info.firmware_version})`,
-              ethIp: networkInfo.ethIp,
-              ethMac: networkInfo.ethMac,
-              wlanIp: networkInfo.wlanIp,
-              wlanMac: networkInfo.wlanMac,
-              updatedAt: sql`now()`,
-            },
-          })
-          .returning()
-      )[0]
-
-      if (!upsertedDevice) {
-        return {
-          ip: bindDeviceItem.ip,
-          status: 'error',
-          message: 'Failed to upsert device in database',
-        }
-      }
-
-      return {
-        ip: bindDeviceItem.ip,
-        status: 'bound',
-        device: upsertedDevice,
-      }
-    } catch (error) {
-      log.error(error, 'Database error while binding device')
-      return {
-        ip: bindDeviceItem.ip,
-        status: 'error',
-        message: `Database error: ${(error as Error).message}`,
-      }
-    }
   }
 }
 
